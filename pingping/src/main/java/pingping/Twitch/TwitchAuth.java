@@ -17,7 +17,7 @@ import pingping.Http;
 public class TwitchAuth {
     private static final String tokenRequestUrl = "https://id.twitch.tv/oauth2/token";
     private static final String tokenRequestBody = 
-        "client_id=wnifut61y7rq4iria050d36sni9fp6" +
+        "client_id=" + Dotenv.load().get("TWITCH_CLIENT_ID") +
         "&client_secret=" + Dotenv.load().get("TWITCH_SECRET") +
         "&grant_type=client_credentials";
 
