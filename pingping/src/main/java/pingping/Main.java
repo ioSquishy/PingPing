@@ -9,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         Database.connect();
         Database.createTables();
-        // TwitchConduit conduit = TwitchConduit.getConduit(null);
+        TwitchConduit conduit = TwitchConduit.getConduit(null);
         // System.out.println("registered: " + conduit.registerSubscription("asquishy"));
     }
 }
