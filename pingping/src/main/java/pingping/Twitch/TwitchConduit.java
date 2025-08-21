@@ -40,19 +40,19 @@ public class TwitchConduit {
             });
         } catch (ConduitNotFoundException e) {
             // TODO create new conduit and recreate subscriptions pulling from database
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         } catch (CreateConduitException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         } catch (ConduitResizeException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         } catch (ShardTimeoutException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         } catch (ShardRegistrationException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
 
         self = this;

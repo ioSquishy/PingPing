@@ -40,7 +40,7 @@ public class TwitchAuth {
         try {
             requestResponse = requestNewToken.call();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return false;
         }
         
@@ -70,7 +70,7 @@ public class TwitchAuth {
             tokenTtl = rootNode.path("expires_in").asInt();
             return true;
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return false;
         }
     }
