@@ -104,8 +104,7 @@ public class Database {
     public class ServerTable {
         public static final String tableName = "servers";
         public static enum Columns {
-            SERVER_ID("server_id"),
-            TWITCH_DATA_TABLE_ID("twitch_data_table_id");
+            SERVER_ID("server_id"); // INTEGER
 
             public final String sqlColumnName;
             private Columns(String sqlColumnName) {
@@ -128,7 +127,7 @@ public class Database {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
 
-                return Database.TwitchTable.insertRow(server_id);
+                return Database.TwitchSubsTable.insertRow(server_id);
             } catch (SQLException e) {
                 System.err.println(e.getMessage());
                 return false;
@@ -136,11 +135,13 @@ public class Database {
         }
     }
 
-    public static class TwitchTable {
-        public static final String tableName = "twitch_data";
+    public static class TwitchSubsTable {
+        public static final String tableName = "twitch_subscriptions";
         public static enum Columns {
-            SERVER_ID("server_id"),
-            SUBSCRIPTIONS("subscriptions");
+            SERVER_ID("server_id"), // INTEGER
+            BROADCASTER_ID("broadcaster_id"), // INTEGER
+            PINGROLE_ID("pingrole_id"), // INTEGER
+            PINGCHANNEL_ID("pingchannel_id"); // INTEGER
 
             public final String sqlColumnName;
             private Columns(String sqlColumnName) {
@@ -175,24 +176,22 @@ public class Database {
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
             ");";
         String serverTable = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
-            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
-            ServerTable.Columns.TWITCH_DATA_TABLE_ID + " INTEGER" +
+            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
-        
+        String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
+            TwitchSubsTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
+            TwitchSubsTable.Columns.BROADCASTER_ID + " INTEGER," +
+            TwitchSubsTable.Columns.PINGROLE_ID + " INTEGER," +
+            TwitchSubsTable.Columns.PINGCHANNEL_ID + " INTEGER," +
+            "FOREIGN KEY (server_id) REFERENCES servers(server_id) ON DELETE CASCADE" + 
+            ");";
         try {
             connection.createStatement().execute(globalTable);
             connection.createStatement().execute(serverTable);
+            connection.createStatement().execute(twitchTable);
             System.out.println("Database tables created.");
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
     }
-
-    // public static boolean createTwitchDataTable(long server_id) {
-    //     String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchTable.tableName + " (" +
-    //         TwitchTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
-    //         TwitchTable.Columns.SUBSCRIPTIONS + " TEXT," + 
-    //         "FOREIGN KEY (server_id) REFERENCES servers(server_id) ON DELETE CASCADE" + 
-    //         ");";
-    // }
 }

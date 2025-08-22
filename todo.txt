@@ -1,5 +1,0 @@
-1. remove current static TwitchTable class
-2. replace ^ with a non-static TwitchDataTable class
-    will require a server_id to use as a FOREIGN KEY and link to ServerTable
-    will have name: [server_id]-twitch_subs
-    will have columns: server_id,channel_id,pingrole_id,pingchannel_id
