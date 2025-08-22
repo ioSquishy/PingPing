@@ -1,7 +1,9 @@
 package pingping.Twitch;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
+
+import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 import com.github.philippheuer.events4j.api.IEventManager;
 import com.github.twitch4j.eventsub.EventSubSubscription;
@@ -27,36 +29,46 @@ public class TwitchConduit {
      * Creates or retrieves a conduit
      * @param existingConduitId if provided, will search for existing conduit or return a new one
      */
-    private TwitchConduit(Optional<String> existingConduitId) {
+    private TwitchConduit(@Nullable String existingConduitId) {
+        if (setConduit(existingConduitId)) {
+            self = this;
+            registerEventListeners();
+        }
+    }
+
+    /**
+     * return true if successful
+     * @param existingConduitId
+     * @return
+     */
+    private static boolean setConduit(@Nullable String existingConduitId) {
         try {
             conduit = TwitchConduitSocketPool.create(spec -> {
                 spec.clientId(Dotenv.load().get("TWITCH_CLIENT_ID"));
                 spec.clientSecret(Dotenv.load().get("TWITCH_SECRET"));
-                if (existingConduitId.isPresent()) {
-                    spec.conduitId(existingConduitId.get());
-                } else {
-                    spec.poolShards(4);
-                }            
+                spec.poolShards(4);
+                spec.conduitId(existingConduitId);
             });
+            return true;
         } catch (ConduitNotFoundException e) {
             // TODO create new conduit and recreate subscriptions pulling from database
-            System.err.println(e.getMessage());
+            Logger.warn(e);
+            // create new conduit
+            if (!setConduit(null)) {
+                Logger.error(e);
+                return false;
+            }
+            // pull subscriptions from database and recreate them
         } catch (CreateConduitException e) {
-            // TODO Auto-generated catch block
-            System.err.println(e.getMessage());
-        } catch (ConduitResizeException e) {
-            // TODO Auto-generated catch block
-            System.err.println(e.getMessage());
+            Logger.error(e);
         } catch (ShardTimeoutException e) {
-            // TODO Auto-generated catch block
-            System.err.println(e.getMessage());
+            Logger.error(e);
+        } catch (ConduitResizeException e) {
+            Logger.error(e);
         } catch (ShardRegistrationException e) {
-            // TODO Auto-generated catch block
-            System.err.println(e.getMessage());
+            Logger.error(e);
         }
-
-        self = this;
-        registerEventListeners();
+        return false;
     }
 
     private void registerEventListeners() {
@@ -66,18 +78,23 @@ public class TwitchConduit {
         eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
     }
 
-    public static TwitchConduit getConduit(Optional<String> existingConduitId) {
+    public static TwitchConduit getConduit(@Nullable String existingConduitId) {
         return conduit == null ? new TwitchConduit(existingConduitId) : self;
     }
 
+    /**
+     * returns true if successful
+     * @param channelName
+     * @return
+     */
     public boolean registerSubscription(String channelName) {
         String channelId = TwitchAPI.getChannelId(channelName);
         try {
-            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, b -> b.broadcasterUserId(channelId).build()).orElseThrow();
+            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(channelId).build()).orElseThrow();
             System.out.println("sub successful!");
             return true;
         } catch (NoSuchElementException e) {
-            e.printStackTrace();
+            Logger.debug("Could not create subscrition for channel: {}", channelName);
             return false;
         }
     }

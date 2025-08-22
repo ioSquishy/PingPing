@@ -1,0 +1,8 @@
+2025-08-22 11:41:09 [main] com.netflix.config.sources.URLConfigurationSource.<init>()
+WARN: No URLs will be polled as dynamic configuration sources.
+2025-08-22 11:41:09 [main] com.netflix.config.sources.URLConfigurationSource.<init>()
+INFO: To enable URLs as dynamic configuration sources, define System property archaius.configurationSource.additionalUrls or make config.properties available on classpath.
+2025-08-22 11:41:09 [main] io.github.xanthic.cache.core.CacheApiSettings.registerCacheProvider()
+INFO: Xanthic: Automatically set default cache provider to CaffeineProvider.
+2025-08-22 11:41:09 [main] com.netflix.config.DynamicPropertyFactory.getInstance()
+INFO: DynamicPropertyFactory is initialized with configuration sources: com.netflix.config.ConcurrentCompositeConfiguration@15eebbff

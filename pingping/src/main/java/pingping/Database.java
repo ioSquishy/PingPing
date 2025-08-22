@@ -5,11 +5,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Optional;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 public class Database {
-    public static final String connectionUrl = "jdbc:sqlite:pingping.db";
-    private static Connection connection = null;
+    protected static final String connectionUrl = "jdbc:sqlite:pingping.db";
+    protected static Connection connection = null;
 
     public static boolean connect() {
         try {
@@ -52,7 +55,7 @@ public class Database {
 
         public static boolean insertRow(long bot_id) {
             final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.BOT_ID+") VALUES(?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setLong(1, bot_id);
                 statement.executeUpdate();
                 return true;
@@ -67,7 +70,7 @@ public class Database {
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
                 " WHERE " + Columns.BOT_ID + " = ?";
             
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setString(1, conduit_id);
                 statement.setLong(2, bot_id);
                 statement.executeUpdate();
@@ -78,30 +81,31 @@ public class Database {
             }
         }
 
-        public static Optional<String> getConduitId(long bot_id) {
+        public static @Nullable String getConduitId(long bot_id) {
             final String sql = "SELECT " + Columns.TWITCH_CONDUIT_ID + 
                 " FROM " + tableName + 
                 " WHERE " + Columns.BOT_ID + " = ? " +
                 " LIMIT 1";
             
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setLong(1, bot_id);
                 ResultSet result = statement.executeQuery();
                 if (!result.next()) {
-                    
+                    Logger.debug("getConduitId() did not retrieve any results");
                 }
-                return Optional.ofNullable(result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName));
+                return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
                 System.err.println(e.getMessage());
-                return Optional.empty();
+                return null;
             }
         }
     }
 
-    public static class ServerTable {
+    public class ServerTable {
         public static final String tableName = "servers";
         public static enum Columns {
-            SERVER_ID("server_id");
+            SERVER_ID("server_id"),
+            TWITCH_DATA_TABLE_ID("twitch_data_table_id");
 
             public final String sqlColumnName;
             private Columns(String sqlColumnName) {
@@ -120,11 +124,11 @@ public class Database {
          */
         public static boolean insertRow(long server_id) {
             final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.SERVER_ID+") VALUES(?)";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
 
-                return TwitchTable.insertRow(server_id);
+                return Database.TwitchTable.insertRow(server_id);
             } catch (SQLException e) {
                 System.err.println(e.getMessage());
                 return false;
@@ -159,28 +163,36 @@ public class Database {
                 return false;
             }
         }
+
+        // public static List<String> getSubscribedIds(long server_id) {
+            
+        // }
     }
 
-    public static void createTables() {
+    public static void createBaseTables() {
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
             GlobalTable.Columns.BOT_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
             ");";
         String serverTable = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
-            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" + 
+            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
+            ServerTable.Columns.TWITCH_DATA_TABLE_ID + " INTEGER" +
             ");";
-        String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchTable.tableName + " (" +
-            TwitchTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
-            TwitchTable.Columns.SUBSCRIPTIONS + " TEXT," + 
-            "FOREIGN KEY (server_id) REFERENCES servers(server_id) ON DELETE CASCADE" + 
-            ");";
+        
         try {
             connection.createStatement().execute(globalTable);
             connection.createStatement().execute(serverTable);
-            connection.createStatement().execute(twitchTable);
             System.out.println("Database tables created.");
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
     }
+
+    // public static boolean createTwitchDataTable(long server_id) {
+    //     String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchTable.tableName + " (" +
+    //         TwitchTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
+    //         TwitchTable.Columns.SUBSCRIPTIONS + " TEXT," + 
+    //         "FOREIGN KEY (server_id) REFERENCES servers(server_id) ON DELETE CASCADE" + 
+    //         ");";
+    // }
 }
