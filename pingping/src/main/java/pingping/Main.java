@@ -11,6 +11,9 @@ public class Main {
         Database.createTables();
         Database.GlobalTable.insertRow(0L);
         Database.GlobalTable.setConduitId(0L, "test");
+        Database.GlobalTable.getConduitId(0L).ifPresent(str -> {
+            System.out.println(str);
+        });
         // TwitchConduit conduit = TwitchConduit.getConduit(null);
         // System.out.println("registered: " + conduit.registerSubscription("asquishy"));
     }

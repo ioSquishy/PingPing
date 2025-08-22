@@ -3,7 +3,9 @@ package pingping;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class Database {
     public static final String connectionUrl = "jdbc:sqlite:pingping.db";
@@ -73,6 +75,25 @@ public class Database {
             } catch (SQLException e) {
                 System.err.println(e.getMessage());
                 return false;
+            }
+        }
+
+        public static Optional<String> getConduitId(long bot_id) {
+            final String sql = "SELECT " + Columns.TWITCH_CONDUIT_ID + 
+                " FROM " + tableName + 
+                " WHERE " + Columns.BOT_ID + " = ? " +
+                " LIMIT 1";
+            
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setLong(1, bot_id);
+                ResultSet result = statement.executeQuery();
+                if (!result.next()) {
+                    
+                }
+                return Optional.ofNullable(result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName));
+            } catch (SQLException e) {
+                System.err.println(e.getMessage());
+                return Optional.empty();
             }
         }
     }
