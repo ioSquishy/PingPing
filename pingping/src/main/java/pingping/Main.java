@@ -9,7 +9,9 @@ public class Main {
     public static void main(String[] args) {
         Database.connect();
         Database.createTables();
-        TwitchConduit conduit = TwitchConduit.getConduit(null);
+        Database.GlobalTable.insertRow(0L);
+        Database.GlobalTable.setConduitId(0L, "test");
+        // TwitchConduit conduit = TwitchConduit.getConduit(null);
         // System.out.println("registered: " + conduit.registerSubscription("asquishy"));
     }
 }
