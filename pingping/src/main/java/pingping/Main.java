@@ -1,5 +1,6 @@
 package pingping;
 
+import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
@@ -8,14 +9,20 @@ public class Main {
         Database.connect();
         Database.createBaseTables();
 
+        // get TwitchConduit
         long bot_userid = 0L;
         Database.GlobalTable.insertRow(bot_userid); // insert botid if it doesnt exist
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_userid); // get conduitid or null
         TwitchConduit conduit = TwitchConduit.getConduit(potentialConduitId); // create or get conduit
         Database.GlobalTable.setConduitId(bot_userid, conduit.getConduitId()); // store conduitid
 
-        System.out.println(conduit.getConduitId());
-        
-        // System.out.println("registered: " + conduit.registerSubscription("asquishy"));
+        // try subs
+        long c_id = TwitchAPI.getChannelId("asquishy").get();
+        System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id, 0L, 0L));
+
+        System.out.println("subs in table:");
+        Database.TwitchSubsTable.pullSubscriptionIds(0L).forEach(str -> {
+            System.out.print(str + ",");
+        });
     }
 }

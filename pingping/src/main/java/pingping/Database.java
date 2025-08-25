@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +17,7 @@ public class Database {
     protected static Connection connection = null;
 
     public static boolean connect() {
+        Logger.trace("connect()");
         try {
             connection = DriverManager.getConnection(connectionUrl);
             System.out.println("Database connection successful.");
@@ -32,7 +35,7 @@ public class Database {
 
             return true;
         } catch (SQLException e) {
-            System.err.println(e.getMessage());
+            Logger.error(e);
         }
         return false;
     }
@@ -127,7 +130,7 @@ public class Database {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
 
-                return Database.TwitchSubsTable.insertRow(server_id);
+                return true;
             } catch (SQLException e) {
                 System.err.println(e.getMessage());
                 return false;
@@ -153,10 +156,16 @@ public class Database {
             }
         }
 
-        private static boolean insertRow(long server_id) {
-            final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.SERVER_ID+") VALUES(?)";
+        public static boolean insertSubscription(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) {
+            final String sql = "INSERT OR IGNORE INTO " +
+                tableName+"("+Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID+")" + 
+                " VALUES(?,?,?,?)";
+            
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
+                statement.setLong(2, broadcaster_id);
+                statement.setLong(3, pingrole_id);
+                statement.setLong(4, pingchannel_id);
                 statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
@@ -165,12 +174,31 @@ public class Database {
             }
         }
 
-        // public static List<String> getSubscribedIds(long server_id) {
-            
-        // }
+        public static List<String> pullSubscriptionIds(long server_id) {
+            final String sql = "SELECT " + Columns.BROADCASTER_ID +
+                " FROM " + TwitchSubsTable.tableName +
+                " WHERE " + Columns.SERVER_ID + " = ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setLong(1, server_id);
+                ResultSet resultSet = statement.executeQuery();
+
+                List<String> subIds = new ArrayList<String>();
+                while (resultSet.next()) {
+                    subIds.add(resultSet.getString(Columns.BROADCASTER_ID.sqlColumnName));
+                }
+                resultSet.close();
+
+                return subIds;
+            } catch (SQLException e) {
+                System.err.println(e.getMessage());
+                return Collections.emptyList();
+            }
+        }
     }
 
     public static void createBaseTables() {
+        Logger.trace("createBaseTables()");
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
             GlobalTable.Columns.BOT_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
@@ -187,11 +215,14 @@ public class Database {
             ");";
         try {
             connection.createStatement().execute(globalTable);
+            Logger.trace("Created globalTable");
             connection.createStatement().execute(serverTable);
+            Logger.trace("Created serverTable");
             connection.createStatement().execute(twitchTable);
+            Logger.trace("Created twitchTable");
             System.out.println("Database tables created.");
         } catch (SQLException e) {
-            System.err.println(e.getMessage());
+            Logger.error(e);
         }
     }
 }

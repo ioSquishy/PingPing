@@ -1,6 +1,7 @@
 package pingping.Twitch;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
@@ -88,13 +89,17 @@ public class TwitchConduit {
      * @return
      */
     public boolean registerSubscription(String channelName) {
-        String channelId = TwitchAPI.getChannelId(channelName);
+        Optional<Long> channelId = TwitchAPI.getChannelId(channelName);
+        return channelId.isPresent() ? registerSubscription(channelId.get()) : false;            
+    }
+
+    public boolean registerSubscription(long channelId) {
         try {
-            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(channelId).build()).orElseThrow();
+            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+channelId).build()).orElseThrow();
             System.out.println("sub successful!");
             return true;
         } catch (NoSuchElementException e) {
-            Logger.debug("Could not create subscrition for channel: {}", channelName);
+            Logger.debug("Could not create subscrition for channelId: {}", channelId);
             return false;
         }
     }

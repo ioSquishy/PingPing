@@ -1,6 +1,9 @@
 package pingping.Twitch;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.tinylog.Logger;
 
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
@@ -15,14 +18,18 @@ public class TwitchAPI {
         .withEnableHelix(true)
         .build();
 
-    public static String getChannelId(String channelName) {
+    public static Optional<Long> getChannelId(String channelName) {
         UserList users = twitchClient.getHelix().getUsers(null, null, List.of(channelName)).execute();
-        if (users.getUsers().isEmpty()) {
-            System.err.println("Error: Could not resolve username to channel ID for channelName: " + channelName);
-            return null;
+        try {
+            if (!users.getUsers().isEmpty()) {
+                return Optional.of(Long.valueOf(users.getUsers().get(0).getId()));
+            }
+        } catch (NumberFormatException e) {
+            Logger.debug(e);
+        } catch (NullPointerException e) {
+            Logger.error(e);
         }
-
-        return users.getUsers().get(0).getId();
+        return Optional.empty();
     }
 
 }
