@@ -31,7 +31,5 @@ public class Main {
         Database.TwitchSubsTable.pullSubscriptionIds(0L).forEach(str -> {
             System.out.print(str + ",");
         });
-
-        Database.ServerTable.removeEntry(0L);
     }
 }
