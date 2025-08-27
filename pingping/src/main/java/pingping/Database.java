@@ -12,6 +12,8 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
+import pingping.Twitch.TwitchSub;
+
 public class Database {
     protected static final String connectionUrl = "jdbc:sqlite:pingping.db";
     protected static Connection connection = null;
@@ -20,15 +22,16 @@ public class Database {
         Logger.trace("connect()");
         try {
             connection = DriverManager.getConnection(connectionUrl);
+            connection.createStatement().execute("PRAGMA foreign_keys = ON;");
             System.out.println("Database connection successful.");
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (connection != null) {
                     try {
                         connection.close();
-                        System.out.println("SQLite connection closed by shutdown hook.");
+                        System.out.println("\nSQLite connection closed by shutdown hook.");
                     } catch (SQLException e) {
-                        System.err.println("Error closing SQLite connection in shutdown hook: " + e.getMessage());
+                        System.err.println("\nError closing SQLite connection in shutdown hook: " + e.getMessage());
                     }
                 }
             }));
@@ -124,15 +127,26 @@ public class Database {
          * @param server_id
          * @return
          */
-        public static boolean insertRow(long server_id) {
+        public static boolean insertEntry(long server_id) {
             final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.SERVER_ID+") VALUES(?)";
             try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
-
                 return true;
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error(e);
+                return false;
+            }
+        }
+
+        public static boolean removeEntry(long server_id) {
+            final String sql = "DELETE FROM " + ServerTable.tableName + " WHERE " + Columns.SERVER_ID + " = ?";
+            try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
+                statement.setLong(1, server_id);
+                statement.executeUpdate();
+                return true;
+            } catch (SQLException e) {
+                Logger.error(e);
                 return false;
             }
         }
@@ -162,6 +176,9 @@ public class Database {
                 " VALUES(?,?,?,?)";
             
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                if (!Database.ServerTable.insertEntry(server_id)) {
+                    return false;
+                }
                 statement.setLong(1, server_id);
                 statement.setLong(2, broadcaster_id);
                 statement.setLong(3, pingrole_id);
@@ -174,11 +191,68 @@ public class Database {
             }
         }
 
+        public static List<TwitchSub> pullTwitchSubs(long server_id) {
+            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
+                " FROM " + TwitchSubsTable.tableName +
+                " WHERE " + Columns.SERVER_ID + " = ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setLong(1, server_id);
+                ResultSet resultSet = statement.executeQuery();
+
+                List<TwitchSub> subs = new ArrayList<TwitchSub>();
+                while (resultSet.next()) {
+                    TwitchSub sub = new TwitchSub(
+                        resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
+                    subs.add(sub);
+                }
+                return subs;
+            } catch (SQLException e) {
+                Logger.error(e);
+                return Collections.emptyList();
+            }
+        }
+
+        /**
+         * @param server_id
+         * @param broadcaster_id
+         * @return a twitch sub with matching server_id and broadcaster_id; null if not found
+         */
+        public static TwitchSub pullTwitchSub(long server_id, long broadcaster_id) {
+            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
+                " FROM " + TwitchSubsTable.tableName +
+                " WHERE " + Columns.SERVER_ID + " = ?" +
+                " AND " + Columns.BROADCASTER_ID + " = ?" +
+                " LIMIT 1";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setLong(1, server_id);
+                statement.setLong(2, broadcaster_id);
+                ResultSet resultSet = statement.executeQuery();
+
+                if (resultSet.next()) {
+                    return new TwitchSub(
+                        resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
+                        resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
+                } else {
+                    return null;
+                }
+            } catch (SQLException e) {
+                Logger.error(e);
+                return null;
+            }
+        }
+
         public static List<String> pullSubscriptionIds(long server_id) {
             final String sql = "SELECT " + Columns.BROADCASTER_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + Columns.SERVER_ID + " = ?";
-
+            
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 ResultSet resultSet = statement.executeQuery();
@@ -187,13 +261,21 @@ public class Database {
                 while (resultSet.next()) {
                     subIds.add(resultSet.getString(Columns.BROADCASTER_ID.sqlColumnName));
                 }
-                resultSet.close();
-
                 return subIds;
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error(e);
                 return Collections.emptyList();
             }
+        }
+
+        public static boolean removeSubscription(long server_id, long broadcaster_id) {
+            // TODO
+            return false;
+        }
+
+        public static boolean updateSubscription(long server_id, long broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id) {
+            //TODO
+            return false;
         }
     }
 
@@ -207,11 +289,12 @@ public class Database {
             ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
         String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
-            TwitchSubsTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY," +
+            TwitchSubsTable.Columns.SERVER_ID + " INTEGER," +
             TwitchSubsTable.Columns.BROADCASTER_ID + " INTEGER," +
             TwitchSubsTable.Columns.PINGROLE_ID + " INTEGER," +
             TwitchSubsTable.Columns.PINGCHANNEL_ID + " INTEGER," +
-            "FOREIGN KEY (server_id) REFERENCES servers(server_id) ON DELETE CASCADE" + 
+            "PRIMARY KEY ("+TwitchSubsTable.Columns.SERVER_ID+","+TwitchSubsTable.Columns.BROADCASTER_ID+")," +
+            "FOREIGN KEY ("+TwitchSubsTable.Columns.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
             ");";
         try {
             connection.createStatement().execute(globalTable);
