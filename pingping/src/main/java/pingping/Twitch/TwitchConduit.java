@@ -1,6 +1,5 @@
 package pingping.Twitch;
 
-import java.lang.StackWalker.Option;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
