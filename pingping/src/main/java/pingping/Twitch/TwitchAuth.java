@@ -3,9 +3,6 @@ package pingping.Twitch;
 import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.tinylog.Logger;
 
