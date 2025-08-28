@@ -10,28 +10,36 @@ public class Main {
         Database.createBaseTables();
 
         // get TwitchConduit
-        // long bot_userid = 0L;
-        // Database.GlobalTable.insertRow(bot_userid); // insert botid if it doesnt exist
-        // String potentialConduitId = Database.GlobalTable.getConduitId(bot_userid); // get conduitid or null
-        // TwitchConduit conduit = TwitchConduit.getConduit(potentialConduitId); // create or get conduit
-        // Database.GlobalTable.setConduitId(bot_userid, conduit.getConduitId()); // store conduitid
+        long bot_userid = 0L;
+        Database.GlobalTable.insertRow(bot_userid); // insert botid if it doesnt exist
+        String potentialConduitId = Database.GlobalTable.getConduitId(bot_userid); // get conduitid or null
+        TwitchConduit conduit = TwitchConduit.getConduit(potentialConduitId); // create or get conduit
+        Database.GlobalTable.setConduitId(bot_userid, conduit.getConduitId()); // store conduitid
 
-        // try subs
-        long c_id1 = TwitchAPI.getChannelId("asquishy").get();
-        long c_id2 = TwitchAPI.getChannelId("apricot").get();
-        long c_id3 = TwitchAPI.getChannelId("nyanners").get();
-        System.out.println("cid1: " + c_id1);
-        System.out.println("cid2: " + c_id2);
-        System.out.println("cid3: " + c_id3);
-        System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id1, 0L, 0L));
-        System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id2, 0L, 0L));
-        System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id3, 0L, 0L));
-
-        System.out.println("subs in table:");
-        Database.TwitchSubsTable.pullSubscriptionIds(0L).forEach(str -> {
-            System.out.print(str + ",");
+        String sub_id = conduit.registerSubscription("asquishy").orElseThrow();
+        TwitchAPI.getEventSubSubs().forEach(sub -> {
+            System.out.println("sub_id: " + sub.getId());
         });
 
-        Database.ServerTable.removeEntry(0L);
+        System.out.println("unsub success: " + conduit.unregisterSubscription(sub_id));
+        TwitchAPI.getEventSubSubs().forEach(sub -> {
+            System.out.println("sub_id: " + sub.getId());
+        });
+
+        // try subs
+        // long c_id1 = TwitchAPI.getChannelId("asquishy").get();
+        // long c_id2 = TwitchAPI.getChannelId("apricot").get();
+        // long c_id3 = TwitchAPI.getChannelId("nyanners").get();
+        // System.out.println("cid1: " + c_id1);
+        // System.out.println("cid2: " + c_id2);
+        // System.out.println("cid3: " + c_id3);
+        // System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id1, 0L, 0L));
+        // System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id2, 0L, 0L));
+        // System.out.println("insert: " + Database.TwitchSubsTable.insertSubscription(0L, c_id3, 0L, 0L));
+
+        // System.out.println("subs in table:");
+        // Database.TwitchSubsTable.pullSubscriptionIds(0L).forEach(str -> {
+        //     System.out.print(str + ",");
+        // });
     }
 }

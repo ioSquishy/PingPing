@@ -1,0 +1,2 @@
+store eventsub ids in database
+fill out method to unregister eventsubs

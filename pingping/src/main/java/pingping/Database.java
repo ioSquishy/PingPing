@@ -23,15 +23,15 @@ public class Database {
         try {
             connection = DriverManager.getConnection(connectionUrl);
             connection.createStatement().execute("PRAGMA foreign_keys = ON;");
-            System.out.println("Database connection successful.");
+            Logger.info("Database connection successful.");
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (connection != null) {
                     try {
                         connection.close();
-                        System.out.println("\nSQLite connection closed by shutdown hook.");
+                        Logger.info("SQLite connection closed by shutdown hook.");
                     } catch (SQLException e) {
-                        System.err.println("\nError closing SQLite connection in shutdown hook: " + e.getMessage());
+                        Logger.error("Error closing SQLite connection in shutdown hook: {}", e.getMessage());
                     }
                 }
             }));

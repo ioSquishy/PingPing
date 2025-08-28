@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.tinylog.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,52 +24,37 @@ public class TwitchAuth {
         "&grant_type=client_credentials";
 
     private static final Callable<HttpResponse<String>> requestNewToken = Http.createRequest(Http.POST(tokenRequestUrl, Map.of(), tokenRequestBody));
-    public static String appAccessToken = "";
-    private static int tokenTtl = -1;
+    protected static String appAccessToken = "";
 
-    private static ScheduledExecutorService reRequestExe = Executors.newSingleThreadScheduledExecutor();
-    private static final Runnable refreshTokenRunnable = () -> {
-        refreshToken();
-    };
-    
-
-    public static boolean InitTokenRequests() {
-        return refreshToken();
-    }
-
-    private static boolean refreshToken() {
+    protected static boolean refreshAppAccessToken() {
         HttpResponse<String> requestResponse;
         try {
             requestResponse = requestNewToken.call();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            Logger.error(e);
             return false;
         }
         
         if (requestResponse.statusCode() == 200) {
             boolean parseSuccess = ParseJson(requestResponse.body());
             if (parseSuccess) {
-                reRequestExe.schedule(refreshTokenRunnable, tokenTtl, TimeUnit.SECONDS);
-                System.out.println("Twitch token retrieved!");
+                Logger.debug("Twitch token retrieved!");
                 return true;
             } else {
-                reRequestExe.schedule(refreshTokenRunnable, 5, TimeUnit.SECONDS);
-                System.err.println("Twitch token request FAILED: " + requestResponse.body());
+                Logger.error("Twitch token request FAILED: {}", requestResponse.body());
                 return false;
             }
         } else {
-            System.err.println("Twitch token request FAILED: " + requestResponse.body());
+            Logger.error("Twitch token request FAILED: {}", requestResponse.body());
             return false;
         }
     }
 
     private static ObjectMapper mapper = new ObjectMapper();
     private static boolean ParseJson(String json) {
-        JsonNode rootNode;
         try {
-            rootNode = mapper.readTree(json);
+            JsonNode rootNode = mapper.readTree(json);
             appAccessToken = rootNode.path("access_token").asText();
-            tokenTtl = rootNode.path("expires_in").asInt();
             return true;
         } catch (JsonProcessingException e) {
             System.err.println(e.getMessage());
