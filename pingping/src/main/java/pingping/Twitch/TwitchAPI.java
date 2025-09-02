@@ -3,6 +3,7 @@ package pingping.Twitch;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import com.github.twitch4j.TwitchClient;
@@ -21,17 +22,14 @@ public class TwitchAPI {
         .withEnableHelix(true)
         .build();
 
-    public static Optional<Long> getChannelId(String channelName) {
+    public static Optional<Long> getChannelId(@NotNull String channelName) {
         UserList users = twitchClient.getHelix().getUsers(null, null, List.of(channelName)).execute();
-        try {
-            if (!users.getUsers().isEmpty()) {
-                return Optional.of(Long.valueOf(users.getUsers().get(0).getId()));
-            }
-        } catch (NumberFormatException e) {
-            Logger.debug(e);
-        } catch (NullPointerException e) {
-            Logger.error(e);
+        if (!users.getUsers().isEmpty()) {
+            Long channelId = Long.valueOf(users.getUsers().get(0).getId());
+            Logger.trace("getChannelId({}) -> {}", channelName, channelId);
+            return Optional.of(channelId);
         }
+        Logger.debug("Could not retrieve channel id of channel: {}", channelName);
         return Optional.empty();
     }
 
@@ -43,7 +41,6 @@ public class TwitchAPI {
     }
 
     public static List<EventSubSubscription> getEventSubSubs() {
-        Logger.trace("getting event subs");
         EventSubSubscriptionList subs;
         try {
             subs = twitchClient.getHelix().getEventSubSubscriptions(TwitchAuth.appAccessToken, null, null, null, null, null).execute();

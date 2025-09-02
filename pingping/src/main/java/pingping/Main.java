@@ -7,14 +7,11 @@ public class Main {
     // public static final DiscordApi api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
     public static void main(String[] args) {
         Database.connect();
-        Database.createBaseTables();
 
         // get TwitchConduit
-        long bot_userid = 0L;
-        Database.GlobalTable.insertRow(bot_userid); // insert botid if it doesnt exist
-        String potentialConduitId = Database.GlobalTable.getConduitId(bot_userid); // get conduitid or null
-        TwitchConduit conduit = TwitchConduit.getConduit(potentialConduitId); // create or get conduit
-        Database.GlobalTable.setConduitId(bot_userid, conduit.getConduitId()); // store conduitid
+        long bot_uid = 0L;
+        Database.GlobalTable.insertRow(bot_uid); // insert botid if it doesnt exist
+        TwitchConduit conduit = TwitchConduit.getConduit(bot_uid); // create or get conduit
 
         String sub_id = conduit.registerSubscription("asquishy").orElseThrow();
         TwitchAPI.getEventSubSubs().forEach(sub -> {

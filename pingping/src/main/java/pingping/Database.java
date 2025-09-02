@@ -15,15 +15,15 @@ import org.tinylog.Logger;
 import pingping.Twitch.TwitchSub;
 
 public class Database {
-    protected static final String connectionUrl = "jdbc:sqlite:pingping.db";
+    protected static final String connectionUrl = "jdbc:sqlite:notpingping.db";
     protected static Connection connection = null;
 
     public static boolean connect() {
-        Logger.trace("connect()");
         try {
             connection = DriverManager.getConnection(connectionUrl);
             connection.createStatement().execute("PRAGMA foreign_keys = ON;");
             Logger.info("Database connection successful.");
+            Database.createBaseTables();
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (connection != null) {
@@ -38,6 +38,7 @@ public class Database {
 
             return true;
         } catch (SQLException e) {
+            Logger.error("Failed to connect to database");
             Logger.error(e);
         }
         return false;
@@ -64,9 +65,11 @@ public class Database {
             try (PreparedStatement statement = Database.connection.prepareStatement(sql)) {
                 statement.setLong(1, bot_id);
                 statement.executeUpdate();
+                Logger.debug("Inserted bot id {} into {}", bot_id, tableName);
                 return true;
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error("Failed to insert bot id {} into {}", bot_id, tableName);
+                Logger.error(e);
                 return false;
             }
         }
@@ -80,9 +83,11 @@ public class Database {
                 statement.setString(1, conduit_id);
                 statement.setLong(2, bot_id);
                 statement.executeUpdate();
+                Logger.debug("Set conduit id for bot id {} to {}", bot_id, conduit_id);
                 return true;
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error("Failed to set conduit id for bot id {} to {}", bot_id, conduit_id);
+                Logger.error(e);
                 return false;
             }
         }
@@ -101,7 +106,8 @@ public class Database {
                 }
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error("Failed to retrieve conduit id for bot id {}", bot_id);
+                Logger.error(e);
                 return null;
             }
         }
@@ -157,6 +163,7 @@ public class Database {
         public static enum Columns {
             SERVER_ID("server_id"), // INTEGER
             BROADCASTER_ID("broadcaster_id"), // INTEGER
+            EVENTSUB_ID("eventsub_id"), // STRING
             PINGROLE_ID("pingrole_id"), // INTEGER
             PINGCHANNEL_ID("pingchannel_id"); // INTEGER
 
@@ -170,10 +177,10 @@ public class Database {
             }
         }
 
-        public static boolean insertSubscription(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) {
+        public static boolean insertSubscription(long server_id, long broadcaster_id, String eventsub_id, long pingrole_id, long pingchannel_id) {
             final String sql = "INSERT OR IGNORE INTO " +
-                tableName+"("+Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID+")" + 
-                " VALUES(?,?,?,?)";
+                tableName+"("+Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID+")" + 
+                " VALUES(?,?,?,?,?)";
             
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 if (!Database.ServerTable.insertEntry(server_id)) {
@@ -181,8 +188,9 @@ public class Database {
                 }
                 statement.setLong(1, server_id);
                 statement.setLong(2, broadcaster_id);
-                statement.setLong(3, pingrole_id);
-                statement.setLong(4, pingchannel_id);
+                statement.setString(3, eventsub_id);
+                statement.setLong(4, pingrole_id);
+                statement.setLong(5, pingchannel_id);
                 statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
@@ -191,8 +199,24 @@ public class Database {
             }
         }
 
+        /**
+         * returns TwitchSub object from current iteration of resultSet
+         * does not increment ResultSet index
+         * @param resultSet assumes the following columns are present: Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID
+         * @return
+         * @throws SQLException
+         */
+        private static TwitchSub createSubFromResultSet(ResultSet resultSet) throws SQLException {
+            return new TwitchSub(
+                resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
+                resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
+                resultSet.getString(Columns.EVENTSUB_ID.sqlColumnName),
+                resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
+                resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
+        }
+
         public static List<TwitchSub> pullTwitchSubs(long server_id) {
-            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
+            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + Columns.SERVER_ID + " = ?";
 
@@ -202,12 +226,7 @@ public class Database {
 
                 List<TwitchSub> subs = new ArrayList<TwitchSub>();
                 while (resultSet.next()) {
-                    TwitchSub sub = new TwitchSub(
-                        resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
-                    subs.add(sub);
+                    subs.add(createSubFromResultSet(resultSet));
                 }
                 return subs;
             } catch (SQLException e) {
@@ -234,11 +253,7 @@ public class Database {
                 ResultSet resultSet = statement.executeQuery();
 
                 if (resultSet.next()) {
-                    return new TwitchSub(
-                        resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
-                        resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
+                    return createSubFromResultSet(resultSet);
                 } else {
                     return null;
                 }
@@ -280,7 +295,6 @@ public class Database {
     }
 
     public static void createBaseTables() {
-        Logger.trace("createBaseTables()");
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
             GlobalTable.Columns.BOT_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
@@ -289,10 +303,11 @@ public class Database {
             ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
         String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
-            TwitchSubsTable.Columns.SERVER_ID + " INTEGER," +
-            TwitchSubsTable.Columns.BROADCASTER_ID + " INTEGER," +
-            TwitchSubsTable.Columns.PINGROLE_ID + " INTEGER," +
-            TwitchSubsTable.Columns.PINGCHANNEL_ID + " INTEGER," +
+            TwitchSubsTable.Columns.SERVER_ID + " INTEGER NOT NULL," +
+            TwitchSubsTable.Columns.BROADCASTER_ID + " INTEGER NOT NULL," +
+            TwitchSubsTable.Columns.EVENTSUB_ID + " STRING NOT NULL," +
+            TwitchSubsTable.Columns.PINGROLE_ID + " INTEGER NOT NULL," +
+            TwitchSubsTable.Columns.PINGCHANNEL_ID + " INTEGER NOT NULL," +
             "PRIMARY KEY ("+TwitchSubsTable.Columns.SERVER_ID+","+TwitchSubsTable.Columns.BROADCASTER_ID+")," +
             "FOREIGN KEY ("+TwitchSubsTable.Columns.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
             ");";
@@ -303,7 +318,7 @@ public class Database {
             Logger.trace("Created serverTable");
             connection.createStatement().execute(twitchTable);
             Logger.trace("Created twitchTable");
-            System.out.println("Database tables created.");
+            Logger.info("Database base tables instantiated.");
         } catch (SQLException e) {
             Logger.error(e);
         }

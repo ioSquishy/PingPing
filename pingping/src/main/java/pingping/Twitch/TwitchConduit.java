@@ -21,6 +21,7 @@ import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionSuccess
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import pingping.Database;
 
 public class TwitchConduit {
     private static TwitchConduit self = null;
@@ -79,8 +80,11 @@ public class TwitchConduit {
         eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
     }
 
-    public static TwitchConduit getConduit(@Nullable String existing_conduit_id) {
-        return conduit == null ? new TwitchConduit(existing_conduit_id) : self;
+    public static TwitchConduit getConduit(long bot_uid) {
+        String potentialConduitId = Database.GlobalTable.getConduitId(bot_uid);
+        TwitchConduit con = conduit == null ? new TwitchConduit(potentialConduitId) : self;
+        Database.GlobalTable.setConduitId(bot_uid, conduit.getConduitId());
+        return con;
     }
 
     /**
