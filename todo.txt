@@ -1,4 +1,3 @@
 store eventsub ids in database
 fill out method to unregister eventsubs
-make discord commands self-register so i can just run 
-    DiscordCommand.run(SlashCommandInteraction interaction) instead of a big switch statement
+maybe move Database.TwitchSubTable Columns enum into TwitchSub.java?

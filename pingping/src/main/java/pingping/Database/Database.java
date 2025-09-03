@@ -1,4 +1,4 @@
-package pingping;
+package pingping.Database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,7 +12,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
-import pingping.Twitch.TwitchSub;
+import pingping.Database.OrmObjects.TwitchSub;
 
 public class Database {
     protected static final String connectionUrl = "jdbc:sqlite:notpingping.db";
@@ -177,6 +177,10 @@ public class Database {
             }
         }
 
+        public static boolean insertSubscription(TwitchSub sub) {
+            return insertSubscription(sub.server_id, sub.broadcaster_id, sub.eventsub_id, sub.pingrole_id, sub.pingchannel_id);
+        }
+
         public static boolean insertSubscription(long server_id, long broadcaster_id, String eventsub_id, long pingrole_id, long pingchannel_id) {
             final String sql = "INSERT OR IGNORE INTO " +
                 tableName+"("+Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID+")" + 
@@ -194,7 +198,7 @@ public class Database {
                 statement.executeUpdate();
                 return true;
             } catch (SQLException e) {
-                System.err.println(e.getMessage());
+                Logger.error(e, "Failed to insert subscription into database.");
                 return false;
             }
         }

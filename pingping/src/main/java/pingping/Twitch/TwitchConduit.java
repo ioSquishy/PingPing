@@ -21,7 +21,7 @@ import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionSuccess
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import pingping.Database;
+import pingping.Database.Database;
 
 public class TwitchConduit {
     private static TwitchConduit self = null;

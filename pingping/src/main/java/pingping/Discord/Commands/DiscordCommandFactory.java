@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.reflections.Reflections;
@@ -24,7 +23,7 @@ public class DiscordCommandFactory {
         }
     }
 
-    public DiscordCommand createCommand(String commandName, SlashCommandInteraction commandInteraction) {
+    public static DiscordCommand createCommand(String commandName, SlashCommandInteraction commandInteraction) {
         Function<SlashCommandInteraction, DiscordCommand> constructor = registeredCommands.get(commandName);
         if (constructor == null) {
             throw new IllegalArgumentException("Unknown command name: " + commandName);
@@ -48,7 +47,7 @@ public class DiscordCommandFactory {
         subTypes.forEach(type -> {
             try {
                 Class.forName(type.getName());
-                Logger.info("Registered DiscordCommand: {}", type.getName());
+                Logger.info("Registered DiscordCommand: {}", type.getSimpleName());
             } catch (ClassNotFoundException e) {
                 // should be impossible
                 Logger.error(e);

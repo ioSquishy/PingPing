@@ -3,7 +3,7 @@ package pingping.Discord.Commands;
 import org.javacord.api.interaction.SlashCommandInteraction;
 
 public abstract class DiscordCommand {
-    private final SlashCommandInteraction interaction;
+    protected final SlashCommandInteraction interaction;
     public final String commandName;
 
     protected DiscordCommand(String commandName, SlashCommandInteraction interaction) {

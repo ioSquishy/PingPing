@@ -10,8 +10,7 @@ public class DiscordAPI {
     public static boolean connect() {
         DiscordCommandFactory.forceLoadCommandClasses();
 
-        DiscordCommand dc = new RegisterTwitchSub(null);
-        dc.runCommand();
+        DiscordCommandFactory.createCommand("RegisterTwitchSub", null).runCommand();;
         return true;
     }
 }

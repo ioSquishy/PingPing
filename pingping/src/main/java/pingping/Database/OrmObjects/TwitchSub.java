@@ -1,4 +1,4 @@
-package pingping.Twitch;
+package pingping.Database.OrmObjects;
 
 public class TwitchSub {
     public final long server_id;
