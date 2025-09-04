@@ -22,6 +22,7 @@ import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import pingping.Database.Database;
+import pingping.Exceptions.TwitchApiException;
 
 public class TwitchConduit {
     private static TwitchConduit self = null;
@@ -30,11 +31,14 @@ public class TwitchConduit {
     /**
      * Creates or retrieves a conduit
      * @param existing_conduit_id if provided, will search for existing conduit or return a new one
+     * @throws TwitchApiException  if conduit registration is unsuccessful
      */
-    private TwitchConduit(@Nullable String existing_conduit_id) {
+    private TwitchConduit(@Nullable String existing_conduit_id) throws TwitchApiException {
         if (setConduit(existing_conduit_id)) {
             self = this;
             registerEventListeners();
+        } else {
+            throw new TwitchApiException("Conduit registration unsuccessful.");
         }
     }
 
@@ -57,17 +61,12 @@ public class TwitchConduit {
             Logger.warn(e);
             // create new conduit
             if (!setConduit(null)) {
-                Logger.error(e);
+                Logger.error("Failed to create new conduit.");
                 return false;
             }
+            Logger.info("New conduit created.");
             // pull subscriptions from database and recreate them
-        } catch (CreateConduitException e) {
-            Logger.error(e);
-        } catch (ShardTimeoutException e) {
-            Logger.error(e);
-        } catch (ConduitResizeException e) {
-            Logger.error(e);
-        } catch (ShardRegistrationException e) {
+        } catch (CreateConduitException | ShardTimeoutException | ConduitResizeException | ShardRegistrationException e) {
             Logger.error(e);
         }
         return false;
@@ -80,7 +79,7 @@ public class TwitchConduit {
         eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
     }
 
-    public static TwitchConduit getConduit(long bot_uid) {
+    public static TwitchConduit getConduit(long bot_uid) throws TwitchApiException {
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_uid);
         TwitchConduit con = conduit == null ? new TwitchConduit(potentialConduitId) : self;
         Database.GlobalTable.setConduitId(bot_uid, conduit.getConduitId());

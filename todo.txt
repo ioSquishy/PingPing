@@ -1,3 +1,2 @@
 store eventsub ids in database
 fill out method to unregister eventsubs
-maybe move Database.TwitchSubTable Columns enum into TwitchSub.java?

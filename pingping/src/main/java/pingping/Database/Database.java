@@ -18,30 +18,22 @@ public class Database {
     protected static final String connectionUrl = "jdbc:sqlite:notpingping.db";
     protected static Connection connection = null;
 
-    public static boolean connect() {
-        try {
-            connection = DriverManager.getConnection(connectionUrl);
-            connection.createStatement().execute("PRAGMA foreign_keys = ON;");
-            Logger.info("Database connection successful.");
-            Database.createBaseTables();
+    public static void connect() throws SQLException {
+        connection = DriverManager.getConnection(connectionUrl);
+        connection.createStatement().execute("PRAGMA foreign_keys = ON;");
+        Logger.info("Database connection successful.");
+        Database.createBaseTables();
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                if (connection != null) {
-                    try {
-                        connection.close();
-                        Logger.info("SQLite connection closed by shutdown hook.");
-                    } catch (SQLException e) {
-                        Logger.error("Error closing SQLite connection in shutdown hook: {}", e.getMessage());
-                    }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (connection != null) {
+                try {
+                    connection.close();
+                    Logger.info("SQLite connection closed by shutdown hook.");
+                } catch (SQLException e) {
+                    Logger.error(e, "Error closing SQLite connection in shutdown hook");
                 }
-            }));
-
-            return true;
-        } catch (SQLException e) {
-            Logger.error("Failed to connect to database");
-            Logger.error(e);
-        }
-        return false;
+            }
+        }));
     }
 
     public static class GlobalTable {
@@ -160,22 +152,7 @@ public class Database {
 
     public static class TwitchSubsTable {
         public static final String tableName = "twitch_subscriptions";
-        public static enum Columns {
-            SERVER_ID("server_id"), // INTEGER
-            BROADCASTER_ID("broadcaster_id"), // INTEGER
-            EVENTSUB_ID("eventsub_id"), // STRING
-            PINGROLE_ID("pingrole_id"), // INTEGER
-            PINGCHANNEL_ID("pingchannel_id"); // INTEGER
-
-            public final String sqlColumnName;
-            private Columns(String sqlColumnName) {
-                this.sqlColumnName = sqlColumnName;
-            }
-            @Override
-            public String toString() {
-                return this.sqlColumnName;
-            }
-        }
+        
 
         public static boolean insertSubscription(TwitchSub sub) {
             return insertSubscription(sub.server_id, sub.broadcaster_id, sub.eventsub_id, sub.pingrole_id, sub.pingchannel_id);
@@ -183,7 +160,7 @@ public class Database {
 
         public static boolean insertSubscription(long server_id, long broadcaster_id, String eventsub_id, long pingrole_id, long pingchannel_id) {
             final String sql = "INSERT OR IGNORE INTO " +
-                tableName+"("+Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID+")" + 
+                tableName+"("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID+")" + 
                 " VALUES(?,?,?,?,?)";
             
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -206,23 +183,23 @@ public class Database {
         /**
          * returns TwitchSub object from current iteration of resultSet
          * does not increment ResultSet index
-         * @param resultSet assumes the following columns are present: Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID
+         * @param result_set assumes the following columns are present: Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID
          * @return
          * @throws SQLException
          */
-        private static TwitchSub createSubFromResultSet(ResultSet resultSet) throws SQLException {
+        private static TwitchSub createSubFromResultSet(ResultSet result_set) throws SQLException {
             return new TwitchSub(
-                resultSet.getLong(Columns.SERVER_ID.sqlColumnName), 
-                resultSet.getLong(Columns.BROADCASTER_ID.sqlColumnName), 
-                resultSet.getString(Columns.EVENTSUB_ID.sqlColumnName),
-                resultSet.getLong(Columns.PINGROLE_ID.sqlColumnName), 
-                resultSet.getLong(Columns.PINGCHANNEL_ID.sqlColumnName));
+                result_set.getLong(TwitchSub.Columns.SERVER_ID.sql_column_name), 
+                result_set.getLong(TwitchSub.Columns.BROADCASTER_ID.sql_column_name), 
+                result_set.getString(TwitchSub.Columns.EVENTSUB_ID.sql_column_name),
+                result_set.getLong(TwitchSub.Columns.PINGROLE_ID.sql_column_name), 
+                result_set.getLong(TwitchSub.Columns.PINGCHANNEL_ID.sql_column_name));
         }
 
         public static List<TwitchSub> pullTwitchSubs(long server_id) {
-            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.EVENTSUB_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
+            final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
-                " WHERE " + Columns.SERVER_ID + " = ?";
+                " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
@@ -245,10 +222,10 @@ public class Database {
          * @return a twitch sub with matching server_id and broadcaster_id; null if not found
          */
         public static TwitchSub pullTwitchSub(long server_id, long broadcaster_id) {
-            final String sql = "SELECT " + Columns.SERVER_ID+","+Columns.BROADCASTER_ID+","+Columns.PINGROLE_ID+","+Columns.PINGCHANNEL_ID +
+            final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
-                " WHERE " + Columns.SERVER_ID + " = ?" +
-                " AND " + Columns.BROADCASTER_ID + " = ?" +
+                " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
+                " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?" +
                 " LIMIT 1";
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -268,9 +245,9 @@ public class Database {
         }
 
         public static List<String> pullSubscriptionIds(long server_id) {
-            final String sql = "SELECT " + Columns.BROADCASTER_ID +
+            final String sql = "SELECT " + TwitchSub.Columns.BROADCASTER_ID +
                 " FROM " + TwitchSubsTable.tableName +
-                " WHERE " + Columns.SERVER_ID + " = ?";
+                " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
             
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, server_id);
@@ -278,7 +255,7 @@ public class Database {
 
                 List<String> subIds = new ArrayList<String>();
                 while (resultSet.next()) {
-                    subIds.add(resultSet.getString(Columns.BROADCASTER_ID.sqlColumnName));
+                    subIds.add(resultSet.getString(TwitchSub.Columns.BROADCASTER_ID.sql_column_name));
                 }
                 return subIds;
             } catch (SQLException e) {
@@ -307,13 +284,13 @@ public class Database {
             ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
         String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
-            TwitchSubsTable.Columns.SERVER_ID + " INTEGER NOT NULL," +
-            TwitchSubsTable.Columns.BROADCASTER_ID + " INTEGER NOT NULL," +
-            TwitchSubsTable.Columns.EVENTSUB_ID + " STRING NOT NULL," +
-            TwitchSubsTable.Columns.PINGROLE_ID + " INTEGER NOT NULL," +
-            TwitchSubsTable.Columns.PINGCHANNEL_ID + " INTEGER NOT NULL," +
-            "PRIMARY KEY ("+TwitchSubsTable.Columns.SERVER_ID+","+TwitchSubsTable.Columns.BROADCASTER_ID+")," +
-            "FOREIGN KEY ("+TwitchSubsTable.Columns.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
+            TwitchSub.Columns.SERVER_ID + " INTEGER NOT NULL," +
+            TwitchSub.Columns.BROADCASTER_ID + " INTEGER NOT NULL," +
+            TwitchSub.Columns.EVENTSUB_ID + " STRING NOT NULL," +
+            TwitchSub.Columns.PINGROLE_ID + " INTEGER NOT NULL," +
+            TwitchSub.Columns.PINGCHANNEL_ID + " INTEGER NOT NULL," +
+            "PRIMARY KEY ("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+")," +
+            "FOREIGN KEY ("+TwitchSub.Columns.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
             ");";
         try {
             connection.createStatement().execute(globalTable);
