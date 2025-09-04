@@ -63,9 +63,6 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
 
         TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId.get(), pingrole_id, pingchannel_id);
-        boolean databaseStoreSuccess = Database.TwitchSubsTable.insertSubscription(sub);
-        if (!databaseStoreSuccess) {
-            throw new DatabaseException("Failed to store subscription in database.");
-        }
+        Database.TwitchSubsTable.insertSubscription(sub);
     }
 }

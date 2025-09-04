@@ -22,11 +22,12 @@ import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import pingping.Database.Database;
+import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.TwitchApiException;
 
 public class TwitchConduit {
     private static TwitchConduit self = null;
-    private static IEventSubConduit conduit;
+    private IEventSubConduit conduit;
 
     /**
      * Creates or retrieves a conduit
@@ -47,7 +48,7 @@ public class TwitchConduit {
      * @param existing_conduit_id
      * @return
      */
-    private static boolean setConduit(@Nullable String existing_conduit_id) {
+    private boolean setConduit(@Nullable String existing_conduit_id) {
         try {
             conduit = TwitchConduitSocketPool.create(spec -> {
                 spec.clientId(Dotenv.load().get("TWITCH_CLIENT_ID"));
@@ -79,10 +80,10 @@ public class TwitchConduit {
         eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
     }
 
-    public static TwitchConduit getConduit(long bot_uid) throws TwitchApiException {
+    public static TwitchConduit getConduit(long bot_uid) throws TwitchApiException, DatabaseException {
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_uid);
-        TwitchConduit con = conduit == null ? new TwitchConduit(potentialConduitId) : self;
-        Database.GlobalTable.setConduitId(bot_uid, conduit.getConduitId());
+        TwitchConduit con = self == null ? new TwitchConduit(potentialConduitId) : self;
+        Database.GlobalTable.setConduitId(bot_uid, con.getConduitId());
         return con;
     }
 

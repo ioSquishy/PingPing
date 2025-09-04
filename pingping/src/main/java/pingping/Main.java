@@ -4,20 +4,20 @@ import org.tinylog.Logger;
 
 import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
-import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
     // public static final DiscordApi api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
     public static void main(String[] args) {
         try {
-            Database.connect();
+            Database.getDatabase();
             DiscordAPI.connect();
             TwitchConduit.getConduit(DiscordAPI.bot_id);
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             return;
         }
+
 
         // get TwitchConduit
         // long bot_uid = 0L;

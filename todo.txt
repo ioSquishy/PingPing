@@ -1,2 +1,3 @@
 store eventsub ids in database
 fill out method to unregister eventsubs
+turn Database.java into singleton pattern so connection can be validated with each request
