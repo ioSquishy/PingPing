@@ -80,6 +80,13 @@ public class TwitchConduit {
         eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
     }
 
+    /**
+     * 
+     * @param bot_uid
+     * @return
+     * @throws TwitchApiException if conduit registration unsuccessful
+     * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
+     */
     public static TwitchConduit getConduit(long bot_uid) throws TwitchApiException, DatabaseException {
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_uid);
         TwitchConduit con = self == null ? new TwitchConduit(potentialConduitId) : self;
@@ -102,27 +109,32 @@ public class TwitchConduit {
      * @param channel_id
      * @return empty if unsuccessful
      */
-    public Optional<String> registerSubscription(long channel_id) {
+    public Optional<String> registerSubscription(long broadcaster_id) {
         try {
-            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+channel_id).build()).orElseThrow();
-            Logger.trace("Twitch subscription registered for channel_id: {}", channel_id);
+            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+broadcaster_id).build()).orElseThrow();
+            Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
             return Optional.of(sub.getId());
         } catch (NoSuchElementException e) {
-            Logger.debug("Could not create subscrition for channel_id: {}", channel_id);
+            Logger.debug("Could not create subscrition for broadcaster_id: {}", broadcaster_id);
             return Optional.empty();
         }
     }
 
-    public boolean unregisterSubscription(String sub_id) {
+    /**
+     * 
+     * @param eventsub_id
+     * @return true if unregistration was successful
+     */
+    public boolean unregisterSubscription(String eventsub_id) {
         String authToken = TwitchAuth.appAccessToken;
-        if (!TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, sub_id).isSuccessfulExecution()) {
+        if (!TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, eventsub_id).isSuccessfulExecution()) {
             TwitchAuth.refreshAppAccessToken();
             authToken = TwitchAuth.appAccessToken;
         } else {
             return true;
         }
         try {
-            TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, sub_id).execute();
+            TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, eventsub_id).execute();
             return true;
         } catch (Exception e) {
             Logger.error(e);

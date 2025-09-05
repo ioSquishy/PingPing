@@ -16,12 +16,12 @@ import pingping.Exceptions.TwitchApiException;
 import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
-public class RegisterTwitchSub extends DiscordCommand {
-    public static final String commandName = "RegisterTwitchSub";
+public class UnregisterTwitchSub extends DiscordCommand {
+    public static final String commandName = "UnregisterTwitchSub";
     static {
-        DiscordCommandFactory.registerCommand(commandName, RegisterTwitchSub::new);
+        DiscordCommandFactory.registerCommand(commandName, UnregisterTwitchSub::new);
     }
-    public RegisterTwitchSub(SlashCommandInteraction interaction) {
+    public UnregisterTwitchSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
     }
     @Override
@@ -31,9 +31,7 @@ public class RegisterTwitchSub extends DiscordCommand {
             Logger.trace("RegisterTwitchSub command ran.");
             long server_id = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
-            long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElseThrow().getId();
-            long channel_id = this.interaction.getArgumentChannelValueByName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name).orElseThrow().getId();
-            registerSub(server_id, streamer, role_id, channel_id);
+            unregisterSub(server_id, streamer);
         } catch (NoSuchElementException e) {
             Logger.error(e, "Discord command argument missing for command: {}", commandName);
             response.setContent("Command failed; Missing an argument.").send();
@@ -50,30 +48,33 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
     }
 
-    public static void registerSub(long server_id, String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
+    public static void unregisterSub(long server_id, String twitch_channel) throws InvalidArgumentException, DatabaseException, TwitchApiException {
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         if (broadcaster_id.isPresent()) {
-            registerSub(server_id, broadcaster_id.get(), pingrole_id, pingchannel_id);
+            unregisterSub(server_id, broadcaster_id.get());
         } else {
             throw new InvalidArgumentException("Could not find twitch channel with name: " + twitch_channel);
         }
     }
 
-    private static void registerSub(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) throws TwitchApiException, DatabaseException {
-        Optional<String> subId = TwitchConduit.getConduit(DiscordAPI.bot_id).registerSubscription(broadcaster_id);
-        if (subId.isEmpty()) {
-            throw new TwitchApiException("Subscription registration through Twitch API was unsuccessful.");
+    private static void unregisterSub(long server_id, long broadcaster_id) throws DatabaseException, TwitchApiException {
+        TwitchSub sub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
+        if (sub == null) {
+            throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
         }
 
-        TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId.get(), pingrole_id, pingchannel_id);
-        
+        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit(DiscordAPI.bot_id).unregisterSubscription(sub.eventsub_id);
+        if (twitchApiUnsubSuccess == false) {
+            throw new TwitchApiException("Failed to unregister subscription with Twitch API.");
+        }
+
         try {
-            Database.TwitchSubsTable.insertSubscription(sub);
+            Database.TwitchSubsTable.removeSubscription(server_id, broadcaster_id);
         } catch (DatabaseException e) {
-            Logger.error(e, "Successfully found and subscripted new twitch sub, but failed to add entry to database. Reverting changes...");
+            Logger.error(e, "Successfully found and removed twitch subscription but failed to remove entry from database. Reverting changes...");
             // revert changes
             try {
-                TwitchConduit.getConduit(DiscordAPI.bot_id).unregisterSubscription(sub.eventsub_id);
+                TwitchConduit.getConduit(DiscordAPI.bot_id).registerSubscription(broadcaster_id);
                 throw e;
             } catch (Exception e2) {
                 Logger.error(e2, "Failed to revert changes.");

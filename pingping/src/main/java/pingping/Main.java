@@ -10,7 +10,7 @@ public class Main {
     // public static final DiscordApi api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
     public static void main(String[] args) {
         try {
-            Database.getDatabase();
+            Database.getConnection();
             DiscordAPI.connect();
             TwitchConduit.getConduit(DiscordAPI.bot_id);
         } catch (Exception e) {

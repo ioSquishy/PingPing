@@ -69,11 +69,17 @@ public class Database {
         }));
     }
 
+    /**
+     * 
+     * @return database connection
+     * @throws DatabaseException if failed to connect to database
+     */
     public static Connection getConnection() throws DatabaseException {
         return getDatabase().connection;
     }
 
-    public static Database getDatabase() throws DatabaseException {
+    
+    private static Database getDatabase() throws DatabaseException {
         try {
             if (singleton == null) {
                 singleton = new Database();
@@ -89,7 +95,7 @@ public class Database {
             }
             return singleton;
         } catch (SQLException e) {
-            Logger.error(e);
+            Logger.error(e, "Failed to connect to database.");
             throw new DatabaseException("Failed to connect to database.");
         }
     }
@@ -122,6 +128,12 @@ public class Database {
             }
         }
 
+        /**
+         * 
+         * @param bot_id
+         * @param conduit_id
+         * @throws DatabaseException if fails to connect to database or set conduit
+         */
         public static void setConduitId(long bot_id, String conduit_id) throws DatabaseException {
             final String sql = "UPDATE " + tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
@@ -138,6 +150,12 @@ public class Database {
             }
         }
 
+        /**
+         * 
+         * @param bot_id
+         * @return
+         * @throws DatabaseException if fails to connect to database
+         */
         public static @Nullable String getConduitId(long bot_id) throws DatabaseException {
             final String sql = "SELECT " + Columns.TWITCH_CONDUIT_ID + 
                 " FROM " + tableName + 
@@ -152,8 +170,8 @@ public class Database {
                 }
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
-                Logger.error(e, "Failed to retrieve conduit id for bot id {}", bot_id);
-                throw new DatabaseException("Failed to get conduit id.");
+                Logger.warn(e, "Failed to retrieve conduit id for bot id {}", bot_id);
+                return null;
             }
         }
     }
@@ -269,7 +287,7 @@ public class Database {
          * @param server_id
          * @param broadcaster_id
          * @return a twitch sub with matching server_id and broadcaster_id; null if not found
-         * @throws DatabaseException 
+         * @throws DatabaseException if connection to database unsuccessful or sql exception
          */
         public static TwitchSub pullTwitchSub(long server_id, long broadcaster_id) throws DatabaseException {
             final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
@@ -294,7 +312,7 @@ public class Database {
             }
         }
 
-        public static List<String> pullSubscriptionIds(long server_id) throws DatabaseException {
+        public static List<String> pullSubscriptionBroadcasterIds(long server_id) throws DatabaseException {
             final String sql = "SELECT " + TwitchSub.Columns.BROADCASTER_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
@@ -309,14 +327,24 @@ public class Database {
                 }
                 return subIds;
             } catch (SQLException e) {
-                Logger.error(e, "Failed to pull subscription ids for server id: {}", server_id);
+                Logger.error(e, "Failed to pull subscription ids for server id: {}.", server_id);
                 throw new DatabaseException("Failed to pull subscription ids.");
             }
         }
 
-        public static boolean removeSubscription(long server_id, long broadcaster_id) {
-            // TODO
-            return false;
+        public static void removeSubscription(long server_id, long broadcaster_id) throws DatabaseException {
+            final String sql = "DELETE FROM " + tableName + 
+                " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
+                " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+            
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                statement.setLong(1, server_id);
+                statement.setLong(2, broadcaster_id);
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to remove subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
+                throw new DatabaseException("Failed to remove subscription.");
+            }
         }
 
         public static boolean updateSubscription(long server_id, long broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id) {
