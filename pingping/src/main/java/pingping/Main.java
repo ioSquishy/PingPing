@@ -4,6 +4,7 @@ import org.tinylog.Logger;
 
 import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
+import pingping.Discord.Commands.RegisterTwitchSub;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
@@ -18,10 +19,17 @@ public class Main {
             return;
         }
 
+        try {
+            // RegisterTwitchSub.registerSub(0L, "asquishy", 0L, 0L);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+
 
         // get TwitchConduit
         // long bot_uid = 0L;
-        // Database.GlobalTable.insertRow(bot_uid); // insert botid if it doesnt exist
+        // Database.GlobalTable.insertRow(bot_uid); // insert bot id if it doesn't exist
         // TwitchConduit conduit = TwitchConduit.getConduit(bot_uid); // create or get conduit
 
         // String sub_id = conduit.registerSubscription("asquishy").orElseThrow();

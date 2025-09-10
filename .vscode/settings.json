@@ -1,4 +1,14 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "cSpell.words": [
+        "asquishy",
+        "dcmd",
+        "eventsub",
+        "Hystrix",
+        "PINGCHANNEL",
+        "pingping",
+        "PINGROLE",
+        "Unsub"
+    ]
 }

@@ -33,9 +33,13 @@ public class TwitchConduit {
      * Creates or retrieves a conduit
      * @param existing_conduit_id if provided, will search for existing conduit or return a new one
      * @throws TwitchApiException  if conduit registration is unsuccessful
+     * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
-    private TwitchConduit(@Nullable String existing_conduit_id) throws TwitchApiException {
-        if (setConduit(existing_conduit_id)) {
+    private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
+        Logger.info("Creating new twitch conduit for bot id: {}", bot_id);
+        String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
+        if (setConduit(potentialConduitId)) {
+            Database.GlobalTable.setConduitId(bot_id, this.conduit.getConduitId());
             self = this;
             registerEventListeners();
         } else {
@@ -59,7 +63,7 @@ public class TwitchConduit {
             return true;
         } catch (ConduitNotFoundException e) {
             // TODO create new conduit and recreate subscriptions pulling from database
-            Logger.warn(e);
+            Logger.warn(e, "Conduit with id {} not found.", existing_conduit_id);
             // create new conduit
             if (!setConduit(null)) {
                 Logger.error("Failed to create new conduit.");
@@ -67,6 +71,8 @@ public class TwitchConduit {
             }
             Logger.info("New conduit created.");
             // pull subscriptions from database and recreate them
+            
+            return true;
         } catch (CreateConduitException | ShardTimeoutException | ConduitResizeException | ShardRegistrationException e) {
             Logger.error(e);
         }
@@ -82,15 +88,13 @@ public class TwitchConduit {
 
     /**
      * 
-     * @param bot_uid
+     * @param bot_id
      * @return
      * @throws TwitchApiException if conduit registration unsuccessful
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
-    public static TwitchConduit getConduit(long bot_uid) throws TwitchApiException, DatabaseException {
-        String potentialConduitId = Database.GlobalTable.getConduitId(bot_uid);
-        TwitchConduit con = self == null ? new TwitchConduit(potentialConduitId) : self;
-        Database.GlobalTable.setConduitId(bot_uid, con.getConduitId());
+    public static TwitchConduit getConduit(long bot_id) throws TwitchApiException, DatabaseException {
+        TwitchConduit con = self == null ? new TwitchConduit(bot_id) : self;
         return con;
     }
 
@@ -115,7 +119,7 @@ public class TwitchConduit {
             Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
             return Optional.of(sub.getId());
         } catch (NoSuchElementException e) {
-            Logger.debug("Could not create subscrition for broadcaster_id: {}", broadcaster_id);
+            Logger.debug("Could not create subscription for broadcaster_id: {}", broadcaster_id);
             return Optional.empty();
         }
     }
@@ -123,7 +127,7 @@ public class TwitchConduit {
     /**
      * 
      * @param eventsub_id
-     * @return true if unregistration was successful
+     * @return true if deregistration was successful
      */
     public boolean unregisterSubscription(String eventsub_id) {
         String authToken = TwitchAuth.appAccessToken;

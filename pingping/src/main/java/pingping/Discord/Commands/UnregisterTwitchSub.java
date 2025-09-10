@@ -43,8 +43,8 @@ public class UnregisterTwitchSub extends DiscordCommand {
             Logger.error(e);
             response.setContent(e.getMessage()).send();
         } catch (Exception e) {
-            Logger.error(e, "Unforseen exception in command: {}", commandName);
-            response.setContent("Command failed for unforseen reason...").send();
+            Logger.error(e, "Unforeseen exception in command: {}", commandName);
+            response.setContent("Command failed for unforeseen reason...").send();
         }
     }
 

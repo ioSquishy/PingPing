@@ -28,7 +28,7 @@ public class RegisterTwitchSub extends DiscordCommand {
     public void runCommand() {
         InteractionFollowupMessageBuilder response = this.interaction.createFollowupMessageBuilder();
         try {
-            Logger.trace("RegisterTwitchSub command ran.");
+            Logger.trace("RegisterTwitchSub discord command ran.");
             long server_id = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
             long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElseThrow().getId();
@@ -45,12 +45,13 @@ public class RegisterTwitchSub extends DiscordCommand {
             Logger.error(e);
             response.setContent(e.getMessage()).send();
         } catch (Exception e) {
-            Logger.error(e, "Unforseen exception in command: {}", commandName);
-            response.setContent("Command failed for unforseen reason...").send();
+            Logger.error(e, "Unforeseen exception in command: {}", commandName);
+            response.setContent("Command failed for unforeseen reason...").send();
         }
     }
 
     public static void registerSub(long server_id, String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
+        Logger.trace("RegisterTwitchSub registerSub ran for server and channel: {} {}.", server_id, twitch_channel);
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         if (broadcaster_id.isPresent()) {
             registerSub(server_id, broadcaster_id.get(), pingrole_id, pingchannel_id);
@@ -79,5 +80,7 @@ public class RegisterTwitchSub extends DiscordCommand {
                 Logger.error(e2, "Failed to revert changes.");
             }
         }
+
+        Logger.debug("Registered subscription for broadcaster id: {}", broadcaster_id);
     }
 }
