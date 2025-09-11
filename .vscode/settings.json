@@ -6,9 +6,11 @@
         "dcmd",
         "eventsub",
         "Hystrix",
+        "notpingping",
         "PINGCHANNEL",
         "pingping",
         "PINGROLE",
         "Unsub"
-    ]
+    ],
+    "java.dependency.packagePresentation": "hierarchical"
 }

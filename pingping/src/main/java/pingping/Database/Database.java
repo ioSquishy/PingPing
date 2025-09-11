@@ -138,7 +138,8 @@ public class Database {
             final String sql = "UPDATE " + tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
                 " WHERE " + Columns.BOT_ID + " = ?";
-            
+            Logger.trace(sql);
+
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setString(1, conduit_id);
                 statement.setLong(2, bot_id);
@@ -166,11 +167,11 @@ public class Database {
                 statement.setLong(1, bot_id);
                 ResultSet result = statement.executeQuery();
                 if (!result.next()) {
-                    Logger.debug("getConduitId() did not retrieve any results");
+                    Logger.warn("getConduitId() did not retrieve any results for bot id {}", bot_id);
                 }
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
-                Logger.warn(e, "Failed to retrieve conduit id for bot id {}", bot_id);
+                Logger.warn(e, "SQLException when attempting to retrieve conduit id for bot id {}", bot_id);
                 return null;
             }
         }

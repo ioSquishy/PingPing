@@ -10,6 +10,7 @@ import pingping.Twitch.TwitchConduit;
 public class Main {
     // public static final DiscordApi api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
     public static void main(String[] args) {
+        System.out.println("test");
         try {
             Database.getConnection();
             DiscordAPI.connect();

@@ -36,10 +36,12 @@ public class TwitchConduit {
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
     private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
-        Logger.info("Creating new twitch conduit for bot id: {}", bot_id);
+        Logger.warn("Existing TwitchConduit not found; Creating new twitch conduit for bot id: {}", bot_id);
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
+        Logger.trace("Potential conduit id: {}", potentialConduitId);
         if (setConduit(potentialConduitId)) {
-            Database.GlobalTable.setConduitId(bot_id, this.conduit.getConduitId());
+            Logger.info("Setting conduit id for bot id {} to {}", bot_id, conduit.getConduitId());
+            Database.GlobalTable.setConduitId(bot_id, conduit.getConduitId());
             self = this;
             registerEventListeners();
         } else {
@@ -53,6 +55,7 @@ public class TwitchConduit {
      * @return
      */
     private boolean setConduit(@Nullable String existing_conduit_id) {
+        Logger.trace("Running setConduit with potential id: {}", existing_conduit_id);
         try {
             conduit = TwitchConduitSocketPool.create(spec -> {
                 spec.clientId(Dotenv.load().get("TWITCH_CLIENT_ID"));
@@ -60,6 +63,7 @@ public class TwitchConduit {
                 spec.poolShards(4);
                 spec.conduitId(existing_conduit_id);
             });
+            Logger.trace("Conduit with id {} created.", conduit.getConduitId());
             return true;
         } catch (ConduitNotFoundException e) {
             // TODO create new conduit and recreate subscriptions pulling from database
@@ -80,6 +84,7 @@ public class TwitchConduit {
     }
 
     private void registerEventListeners() {
+        Logger.info("Registered event listeners for conduit {}", conduit.getConduitId());
         IEventManager eventManager = conduit.getEventManager();
         eventManager.onEvent(StreamOnlineEvent.class, System.out::println);
         eventManager.onEvent(EventSocketSubscriptionSuccessEvent.class, System.out::println);
