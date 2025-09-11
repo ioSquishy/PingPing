@@ -5,6 +5,7 @@ import org.tinylog.Logger;
 import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
 import pingping.Discord.Commands.RegisterTwitchSub;
+import pingping.Discord.Commands.UnregisterTwitchSub;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
@@ -20,7 +21,8 @@ public class Main {
         }
 
         try {
-            // RegisterTwitchSub.registerSub(0L, "asquishy", 0L, 0L);
+            RegisterTwitchSub.registerSub(0L, "asquishy", 0L, 0L);
+            // UnregisterTwitchSub.unregisterSub(0L, "asquishy");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,2 +1,1 @@
 make database check if there are already 5 conduits (the max) and if so terminate the program
-fix TwitchConduit not storing conduit id in database

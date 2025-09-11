@@ -55,20 +55,29 @@ public class RegisterTwitchSub extends DiscordCommand {
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         if (broadcaster_id.isPresent()) {
             registerSub(server_id, broadcaster_id.get(), pingrole_id, pingchannel_id);
-            Logger.trace("Registered twitch sub for channel {} in server {}", twitch_channel, server_id);
+            Logger.debug("Registered twitch sub for channel {} in server {}", twitch_channel, server_id);
         } else {
             throw new InvalidArgumentException("Could not find twitch channel with name: " + twitch_channel);
         }
     }
 
-    private static void registerSub(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) throws TwitchApiException, DatabaseException {
+    private static void registerSub(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) throws TwitchApiException, DatabaseException, InvalidArgumentException {
+        // verify TwitchSub with id does not already exist
+        TwitchSub potentialExistingSub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
+        if (potentialExistingSub != null) {
+            throw new InvalidArgumentException("Twitch sub for that streamer already exists. Use UpdateTwitchSub instead.");
+        }
+
+        // register sub through twitch api and get event_sub id
         Optional<String> subId = TwitchConduit.getConduit(DiscordAPI.bot_id).registerSubscription(broadcaster_id);
         if (subId.isEmpty()) {
             throw new TwitchApiException("Subscription registration through Twitch API was unsuccessful.");
         }
 
+        // package sub details into a TwitchSub
         TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId.get(), pingrole_id, pingchannel_id);
         
+        // store TwitchSub in database
         try {
             Database.TwitchSubsTable.insertSubscription(sub);
         } catch (DatabaseException e) {
@@ -81,7 +90,5 @@ public class RegisterTwitchSub extends DiscordCommand {
                 Logger.error(e2, "Failed to revert changes.");
             }
         }
-
-        Logger.debug("Registered subscription for broadcaster id: {}", broadcaster_id);
     }
 }

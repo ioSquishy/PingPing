@@ -311,7 +311,7 @@ public class Database {
          * @throws DatabaseException if connection to database unsuccessful or sql exception
          */
         public static TwitchSub pullTwitchSub(long server_id, long broadcaster_id) throws DatabaseException {
-            final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
+            final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
                 " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?" +
@@ -365,6 +365,7 @@ public class Database {
                 statement.setLong(1, server_id);
                 statement.setLong(2, broadcaster_id);
                 statement.executeUpdate();
+                Logger.debug("Removed twitch sub from database with server id {} and broadcaster id {}", server_id, broadcaster_id);
             } catch (SQLException e) {
                 Logger.error(e, "Failed to remove subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
                 throw new DatabaseException("Failed to remove subscription.");
