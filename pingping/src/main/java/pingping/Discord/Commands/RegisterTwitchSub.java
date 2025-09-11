@@ -55,6 +55,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         if (broadcaster_id.isPresent()) {
             registerSub(server_id, broadcaster_id.get(), pingrole_id, pingchannel_id);
+            Logger.trace("Registered twitch sub for channel {} in server {}", twitch_channel, server_id);
         } else {
             throw new InvalidArgumentException("Could not find twitch channel with name: " + twitch_channel);
         }

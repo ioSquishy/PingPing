@@ -22,13 +22,19 @@ public class Database {
     private Database() {}
 
     private static void createBaseTables() throws SQLException {
+        Logger.trace("Creating base tables for database.");
+
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
             GlobalTable.Columns.BOT_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
             ");";
+        Logger.trace("Global table SQL: {}", globalTable);
+
         String serverTable = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
             ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
+        Logger.trace("Server table SQL: {}", serverTable);
+
         String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
             TwitchSub.Columns.SERVER_ID + " INTEGER NOT NULL," +
             TwitchSub.Columns.BROADCASTER_ID + " INTEGER NOT NULL," +
@@ -38,6 +44,8 @@ public class Database {
             "PRIMARY KEY ("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+")," +
             "FOREIGN KEY ("+TwitchSub.Columns.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
             ");";
+        Logger.trace("Twitch table SQL: {}", twitchTable);
+
         try {
             Database.singleton.connection.createStatement().execute(globalTable);
             Logger.trace("Created globalTable");
@@ -82,6 +90,7 @@ public class Database {
     private static Database getDatabase() throws DatabaseException {
         try {
             if (singleton == null) {
+                Logger.trace("Singleton is null, connecting database to new singleton...");
                 singleton = new Database();
                 singleton.connect();
             }
@@ -118,6 +127,7 @@ public class Database {
 
         public static void insertRow(long bot_id) throws DatabaseException {
             final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.BOT_ID+") VALUES(?)";
+            Logger.trace("SQL: {}\n?: {}", sql, bot_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, bot_id);
                 statement.executeUpdate();
@@ -129,7 +139,6 @@ public class Database {
         }
 
         /**
-         * 
          * @param bot_id
          * @param conduit_id
          * @throws DatabaseException if fails to connect to database or set conduit
@@ -138,7 +147,7 @@ public class Database {
             final String sql = "UPDATE " + tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
                 " WHERE " + Columns.BOT_ID + " = ?";
-            Logger.trace(sql);
+            Logger.trace("SQL: {}\n?: {}, {}", sql, conduit_id, bot_id);
 
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setString(1, conduit_id);
@@ -149,6 +158,13 @@ public class Database {
                 Logger.error(e, "Failed to set conduit id for bot id {} to {}", bot_id, conduit_id);
                 throw new DatabaseException("Failed to set conduit id.");
             }
+        }
+
+        public static void putConduitId(long bot_id, String conduit_id) throws DatabaseException {
+            if (getConduitId(bot_id) == null) {
+                insertRow(bot_id);
+            }
+            setConduitId(bot_id, conduit_id);
         }
 
         /**
@@ -162,12 +178,13 @@ public class Database {
                 " FROM " + tableName + 
                 " WHERE " + Columns.BOT_ID + " = ? " +
                 " LIMIT 1";
+            Logger.trace("SQL: {}\n?: {}", sql, bot_id);
             
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, bot_id);
                 ResultSet result = statement.executeQuery();
                 if (!result.next()) {
-                    Logger.warn("getConduitId() did not retrieve any results for bot id {}", bot_id);
+                    Logger.debug("getConduitId() did not retrieve any results for bot id {}", bot_id);
                 }
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
@@ -200,6 +217,7 @@ public class Database {
          */
         public static void insertEntry(long server_id) throws DatabaseException {
             final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.SERVER_ID+") VALUES(?)";
+            Logger.trace("SQL: {}\n?: {}", sql, server_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
@@ -211,6 +229,7 @@ public class Database {
 
         public static void removeEntry(long server_id) throws DatabaseException {
             final String sql = "DELETE FROM " + ServerTable.tableName + " WHERE " + Columns.SERVER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", sql, server_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
@@ -233,7 +252,7 @@ public class Database {
             final String sql = "INSERT OR IGNORE INTO " +
                 tableName+"("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID+")" + 
                 " VALUES(?,?,?,?,?)";
-            
+            Logger.trace("SQL: {}\n?: {}, {}, {}, {}, {}", sql, server_id, broadcaster_id, eventsub_id, pingrole_id, pingchannel_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 Database.ServerTable.insertEntry(server_id);
                 statement.setLong(1, server_id);
@@ -268,6 +287,7 @@ public class Database {
             final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", sql, server_id);
 
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
@@ -296,6 +316,7 @@ public class Database {
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
                 " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?" +
                 " LIMIT 1";
+            Logger.trace("SQL: {}\n?: {}, {}", sql, server_id, broadcaster_id);
 
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
@@ -317,6 +338,7 @@ public class Database {
             final String sql = "SELECT " + TwitchSub.Columns.BROADCASTER_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", sql, server_id);
             
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
@@ -337,6 +359,7 @@ public class Database {
             final String sql = "DELETE FROM " + tableName + 
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
                 " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", server_id, broadcaster_id);
             
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);

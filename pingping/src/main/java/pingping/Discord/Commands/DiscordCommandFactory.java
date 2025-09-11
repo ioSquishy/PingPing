@@ -47,11 +47,13 @@ public class DiscordCommandFactory {
         subTypes.forEach(type -> {
             try {
                 Class.forName(type.getName());
-                Logger.info("Registered DiscordCommand: {}", type.getSimpleName());
+                Logger.trace("Registered DiscordCommand: {}", type.getSimpleName());
             } catch (ClassNotFoundException e) {
                 // should be impossible
                 Logger.error(e);
             }
         });
+
+        Logger.info("Discord Commands registered.");
     }
 }

@@ -38,12 +38,19 @@ public class TwitchConduit {
     private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
         Logger.warn("Existing TwitchConduit not found; Creating new twitch conduit for bot id: {}", bot_id);
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
-        Logger.trace("Potential conduit id: {}", potentialConduitId);
+        if (potentialConduitId == null) {
+            Logger.warn("No existing conduit id in database found for bot id {}", bot_id);
+        } else {
+            Logger.debug("Potential conduit id for bot id {}: {}", bot_id, potentialConduitId);
+        }
         if (setConduit(potentialConduitId)) {
-            Logger.info("Setting conduit id for bot id {} to {}", bot_id, conduit.getConduitId());
-            Database.GlobalTable.setConduitId(bot_id, conduit.getConduitId());
+            String actualConduitId = conduit.getConduitId();
+            Logger.debug("Setting conduit id for bot id {} to {}", bot_id, actualConduitId);
+            Database.GlobalTable.putConduitId(bot_id, actualConduitId);
+            Logger.info("Set conduit id for bot id {} to {}", bot_id, actualConduitId);
             self = this;
             registerEventListeners();
+            Logger.info("Twitch conduit connected.");
         } else {
             throw new TwitchApiException("Conduit registration unsuccessful.");
         }
@@ -54,26 +61,26 @@ public class TwitchConduit {
      * @param existing_conduit_id
      * @return
      */
-    private boolean setConduit(@Nullable String existing_conduit_id) {
-        Logger.trace("Running setConduit with potential id: {}", existing_conduit_id);
+    private boolean setConduit(@Nullable String potentialConduitId) {
+        Logger.trace("Running setConduit with potential id: {}", potentialConduitId);
         try {
             conduit = TwitchConduitSocketPool.create(spec -> {
                 spec.clientId(Dotenv.load().get("TWITCH_CLIENT_ID"));
                 spec.clientSecret(Dotenv.load().get("TWITCH_SECRET"));
                 spec.poolShards(4);
-                spec.conduitId(existing_conduit_id);
+                spec.conduitId(potentialConduitId);
             });
-            Logger.trace("Conduit with id {} created.", conduit.getConduitId());
+            Logger.trace("Conduit created with id: {}", conduit.getConduitId());
             return true;
         } catch (ConduitNotFoundException e) {
             // TODO create new conduit and recreate subscriptions pulling from database
-            Logger.warn(e, "Conduit with id {} not found.", existing_conduit_id);
+            Logger.warn(e, "Conduit with id {} not found. Creating new conduit...", potentialConduitId);
             // create new conduit
             if (!setConduit(null)) {
                 Logger.error("Failed to create new conduit.");
                 return false;
             }
-            Logger.info("New conduit created.");
+            Logger.info("New conduit created with id {}", conduit.getConduitId());
             // pull subscriptions from database and recreate them
             
             return true;
