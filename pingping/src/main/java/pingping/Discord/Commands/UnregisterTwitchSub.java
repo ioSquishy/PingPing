@@ -3,7 +3,11 @@ package pingping.Discord.Commands;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.javacord.api.entity.permission.PermissionType;
+import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
+import org.javacord.api.interaction.SlashCommandOptionBuilder;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionFollowupMessageBuilder;
 import org.tinylog.Logger;
 
@@ -23,6 +27,19 @@ public class UnregisterTwitchSub extends DiscordCommand {
     }
     public UnregisterTwitchSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
+    }
+    @Override
+    protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
+        return Optional.of(new SlashCommandBuilder()
+            .setName(commandName)
+            .setDescription("Unregister a twitch subscription for this server.")
+            .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
+            .setEnabledInDms(false)
+            .addOption(new SlashCommandOptionBuilder()
+                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setType(SlashCommandOptionType.STRING)
+                .setRequired(true)
+                .build()));
     }
     @Override
     public void runCommand() {
@@ -65,7 +82,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
         }
 
-        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit(DiscordAPI.bot_id).unregisterSubscription(sub.eventsub_id);
+        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit(DiscordAPI.getBotId()).unregisterSubscription(sub.eventsub_id);
         if (twitchApiUnsubSuccess == false) {
             throw new TwitchApiException("Failed to unregister subscription with Twitch API.");
         }
@@ -76,7 +93,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             Logger.error(e, "Successfully found and removed twitch subscription but failed to remove entry from database. Reverting changes...");
             // revert changes
             try {
-                TwitchConduit.getConduit(DiscordAPI.bot_id).registerSubscription(broadcaster_id);
+                TwitchConduit.getConduit(DiscordAPI.getBotId()).registerSubscription(broadcaster_id);
                 throw e;
             } catch (Exception e2) {
                 Logger.error(e2, "Failed to revert changes.");

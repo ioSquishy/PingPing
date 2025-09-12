@@ -6,8 +6,12 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import org.javacord.api.entity.channel.ServerChannel;
+import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Role;
+import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
+import org.javacord.api.interaction.SlashCommandOptionBuilder;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionFollowupMessageBuilder;
 import org.tinylog.Logger;
 
@@ -24,6 +28,31 @@ public class UpdateTwitchSub extends DiscordCommand {
     }
     public UpdateTwitchSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
+    }
+    @Override
+    protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
+        return Optional.of(new SlashCommandBuilder()
+            .setName(commandName)
+            .setDescription("Update a twitch subscription for this server.")
+            .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
+            .setEnabledInDms(false)
+            .addOption(new SlashCommandOptionBuilder()
+                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setType(SlashCommandOptionType.STRING)
+                .setRequired(true)
+                .build())
+            .addOption(new SlashCommandOptionBuilder()
+                .setName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name)
+                .setDescription("Role to ping when streamer goes live.")
+                .setType(SlashCommandOptionType.ROLE)
+                .setRequired(false)
+                .build())
+            .addOption(new SlashCommandOptionBuilder()
+                .setName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name)
+                .setDescription("Discord channel to send stream notification in.")
+                .setType(SlashCommandOptionType.CHANNEL)
+                .setRequired(false)
+                .build()));
     }
     @Override
     public void runCommand() {

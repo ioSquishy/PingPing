@@ -10,12 +10,12 @@ import pingping.Discord.Commands.UpdateTwitchSub;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
-    // public static final DiscordApi api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
+    // 
     public static void main(String[] args) {
         try {
             Database.getConnection();
             DiscordAPI.connect();
-            TwitchConduit.getConduit(DiscordAPI.bot_id);
+            TwitchConduit.getConduit(DiscordAPI.getBotId());
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             return;
@@ -24,7 +24,7 @@ public class Main {
         try {
             // RegisterTwitchSub.registerSub(0L, "asquishy", 0L, 0L);
             // UnregisterTwitchSub.unregisterSub(0L, "asquishy");
-            UpdateTwitchSub.updateSub(1L, "asquishy", 0L, 0L);
+            // UpdateTwitchSub.updateSub(1L, "asquishy", 0L, 0L);
         } catch (Exception e) {
             e.printStackTrace();
         }
