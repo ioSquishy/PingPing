@@ -134,7 +134,7 @@ public class Database {
                 Logger.debug("Inserted bot id {} into {}", bot_id, tableName);
             } catch (SQLException e) {
                 Logger.error(e, "Failed to insert bot id {} into {}", bot_id, tableName);
-                throw new DatabaseException("Failed to store bot id.");
+                throw new DatabaseException("Failed to store bot id in database.");
             }
         }
 
@@ -156,7 +156,7 @@ public class Database {
                 Logger.debug("Set conduit id for bot id {} to {}", bot_id, conduit_id);
             } catch (SQLException e) {
                 Logger.error(e, "Failed to set conduit id for bot id {} to {}", bot_id, conduit_id);
-                throw new DatabaseException("Failed to set conduit id.");
+                throw new DatabaseException("Failed to set conduit id in database.");
             }
         }
 
@@ -189,7 +189,7 @@ public class Database {
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
                 Logger.warn(e, "SQLException when attempting to retrieve conduit id for bot id {}", bot_id);
-                return null;
+                throw new DatabaseException("Failed to get conduit id from database.");
             }
         }
     }
@@ -223,7 +223,7 @@ public class Database {
                 statement.executeUpdate();
             } catch (SQLException e) {
                 Logger.error(e, "Failed to insert server id {} into {} table.", server_id, tableName);
-                throw new DatabaseException("Failed to store server id.");
+                throw new DatabaseException("Failed to store server id in database.");
             }
         }
 
@@ -235,7 +235,7 @@ public class Database {
                 statement.executeUpdate();
             } catch (SQLException e) {
                 Logger.error(e, "Failed to remove server id {} from {} table.", server_id, tableName);
-                throw new DatabaseException("Failed to remove server id.");
+                throw new DatabaseException("Failed to remove server id from database.");
             }
         }
     }
@@ -300,7 +300,7 @@ public class Database {
                 return subs;
             } catch (SQLException e) {
                 Logger.error(e, "Failed to pull twitch subs for server id {}.", server_id);
-                throw new DatabaseException("Failed to pull twitch subs.");
+                throw new DatabaseException("Failed to pull twitch subs from database.");
             }
         }
 
@@ -314,7 +314,7 @@ public class Database {
             final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
-                " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?" +
+                    " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?" +
                 " LIMIT 1";
             Logger.trace("SQL: {}\n?: {}, {}", sql, server_id, broadcaster_id);
 
@@ -330,7 +330,7 @@ public class Database {
                 }
             } catch (SQLException e) {
                 Logger.error(e, "Failed to pull twitch sub with server_id {} and broadcaster_id {} from {} table.", server_id, broadcaster_id, tableName);
-                throw new DatabaseException("Failed to pull twitch sub.");
+                throw new DatabaseException("Failed to pull twitch sub from database.");
             }
         }
 
@@ -351,14 +351,14 @@ public class Database {
                 return subIds;
             } catch (SQLException e) {
                 Logger.error(e, "Failed to pull subscription ids for server id: {}.", server_id);
-                throw new DatabaseException("Failed to pull subscription ids.");
+                throw new DatabaseException("Failed to pull subscription ids from database.");
             }
         }
 
         public static void removeSubscription(long server_id, long broadcaster_id) throws DatabaseException {
             final String sql = "DELETE FROM " + tableName + 
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
-                " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+                    " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
             Logger.trace("SQL: {}\n?: {}", server_id, broadcaster_id);
             
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -368,13 +368,35 @@ public class Database {
                 Logger.debug("Removed twitch sub from database with server id {} and broadcaster id {}", server_id, broadcaster_id);
             } catch (SQLException e) {
                 Logger.error(e, "Failed to remove subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
-                throw new DatabaseException("Failed to remove subscription.");
+                throw new DatabaseException("Failed to remove subscription in database.");
             }
         }
 
-        public static boolean updateSubscription(long server_id, long broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id) {
-            //TODO
-            return false;
+        public static void updateSubscription(long server_id, long broadcaster_id, String updated_eventsub_id, long updated_pingrole_id, long updated_pingchannel_id) throws DatabaseException {
+            final String sql = "UPDATE " + tableName + 
+                " SET " + TwitchSub.Columns.EVENTSUB_ID + " = ? ," + 
+                    TwitchSub.Columns.PINGROLE_ID + " = ? ," +
+                    TwitchSub.Columns.PINGCHANNEL_ID + " = ?" +
+                " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
+                    " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {},{},{},{},{}", sql, updated_eventsub_id, updated_pingrole_id, updated_pingchannel_id, server_id, broadcaster_id);
+            
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                statement.setString(1, updated_eventsub_id);
+                statement.setLong(2, updated_pingrole_id);
+                statement.setLong(3, updated_pingchannel_id);
+                statement.setLong(4, server_id);
+                statement.setLong(5, broadcaster_id);
+                statement.executeUpdate();
+                Logger.debug("Updated twitch sub in database with server id {} and broadcaster id {}", server_id, broadcaster_id);
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to update subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
+                throw new DatabaseException("Failed to update subscription in database.");
+            }
+        }
+
+        public static void updateSubscription(TwitchSub updated_twitch_sub) throws DatabaseException {
+            updateSubscription(updated_twitch_sub.server_id, updated_twitch_sub.broadcaster_id, updated_twitch_sub.eventsub_id, updated_twitch_sub.pingrole_id, updated_twitch_sub.pingchannel_id);
         }
     }
 }

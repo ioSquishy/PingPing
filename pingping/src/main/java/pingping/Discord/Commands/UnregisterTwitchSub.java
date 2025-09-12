@@ -49,13 +49,13 @@ public class UnregisterTwitchSub extends DiscordCommand {
     }
 
     public static void unregisterSub(long server_id, String twitch_channel) throws InvalidArgumentException, DatabaseException, TwitchApiException {
-        Logger.trace("Unregistering twitch sub for channel {} from server {}", twitch_channel, server_id);
+        Logger.trace("Unregistering twitch sub for streamer {} from server {}", twitch_channel, server_id);
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         if (broadcaster_id.isPresent()) {
             unregisterSub(server_id, broadcaster_id.get());
-            Logger.debug("Unregistered twitch sub for channel {} from server {}", twitch_channel, server_id);
+            Logger.debug("Unregistered twitch sub for streamer {} from server {}", twitch_channel, server_id);
         } else {
-            throw new InvalidArgumentException("Could not find twitch channel with name: " + twitch_channel);
+            throw new InvalidArgumentException("Could not find twitch streamer with name: " + twitch_channel);
         }
     }
 
