@@ -1,3 +1,3 @@
 make database check if there are already 5 conduits (the max) and if so terminate the program
-fix bug: when an exception is thrown, the exception message isn't relayed to interaction response
 add listener for server leave event and remove from database when it is triggered
+make a new method for getConduit that takes no parameter and make db store conduit with primary key set to something public static final in Main.java

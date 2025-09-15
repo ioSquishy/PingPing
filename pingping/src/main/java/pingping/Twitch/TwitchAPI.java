@@ -3,6 +3,8 @@ package pingping.Twitch;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
@@ -11,11 +13,12 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.eventsub.Conduit;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.helix.domain.EventSubSubscriptionList;
+import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.exception.HystrixBadRequestException;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import pingping.Exceptions.TwitchApiException;
 
 public class TwitchAPI {
     protected static final TwitchClient twitchClient = TwitchClientBuilder.builder()
@@ -23,11 +26,25 @@ public class TwitchAPI {
         .withClientSecret(Dotenv.load().get("TWITCH_SECRET"))
         .withEnableHelix(true)
         .build();
+    
+    /**
+     * 
+     * @throws TwitchApiException if api request fails
+     */
+    public static List<User> getUsers(@Nullable List<String> userIds, @Nullable List<String> userNames) throws TwitchApiException {
+        try {
+            UserList queryResult = twitchClient.getHelix().getUsers(null, userIds, userNames).execute();
+            return queryResult.getUsers();
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new TwitchApiException("Failed to retrieve user(s) from Twitch API.");
+        }
+    }
 
-    public static Optional<Long> getChannelId(@NotNull String channelName) {
-        UserList users = twitchClient.getHelix().getUsers(null, null, List.of(channelName)).execute();
-        if (!users.getUsers().isEmpty()) {
-            Long channelId = Long.valueOf(users.getUsers().get(0).getId());
+    public static Optional<Long> getChannelId(@NotNull String channelName) throws TwitchApiException {
+        List<User> users = getUsers(null, List.of(channelName));
+        if (!users.isEmpty()) {
+            Long channelId = Long.valueOf(users.get(0).getId());
             Logger.trace("getChannelId({}) -> {}", channelName, channelId);
             return Optional.of(channelId);
         }
@@ -58,53 +75,30 @@ public class TwitchAPI {
 
     public static List<Conduit> getConduitList() {
         try {
-            return twitchClient.getHelix().getConduits(TwitchAuth.appAccessToken).execute().getConduits();
-        } catch (Exception e1) {
-            Logger.warn(e1);
-            try {
-                TwitchAuth.refreshAppAccessToken();
-                return twitchClient.getHelix().getConduits(TwitchAuth.appAccessToken).execute().getConduits();
-            } catch (Exception e2) {
-                Logger.error(e2);
-            }
+            return twitchClient.getHelix().getConduits(null).execute().getConduits();
+        } catch (Exception e) {
+            Logger.warn(e);
         }
         return null;
     }
 
     public static boolean deleteConduit(String conduit_id) {
-        return deleteConduit(conduit_id, true);
-    }
-    private static boolean deleteConduit(String conduit_id, boolean retry) {
-        HystrixCommand<Void> command = twitchClient.getHelix().deleteConduit(TwitchAuth.appAccessToken, conduit_id);
+        HystrixCommand<Void> command = twitchClient.getHelix().deleteConduit(null, conduit_id);
         command.execute();
         if (command.isSuccessfulExecution()) {
             return true;
         } else {
-            if (retry) {
-                TwitchAuth.refreshAppAccessToken();
-                return deleteConduit(conduit_id, false);
-            } else {
-                Logger.error(command.getExecutionException().getMessage());
-                return false;
-            }
+            Logger.error(command.getExecutionException().getMessage());
+            return false;
         }
     }
 
     public static List<EventSubSubscription> getEventSubSubs() {
         EventSubSubscriptionList subs;
         try {
-            subs = twitchClient.getHelix().getEventSubSubscriptions(TwitchAuth.appAccessToken, null, null, null, null, null).execute();
-        } catch (HystrixBadRequestException e1) {
-            Logger.warn(e1);
-            try {
-                TwitchAuth.refreshAppAccessToken();
-                subs = twitchClient.getHelix().getEventSubSubscriptions(TwitchAuth.appAccessToken, null, null, null, null, null).execute();
-            } catch (Exception e2) {
-                Logger.error(e2);
-                return null;
-            }
-        } catch (Exception ex) {
-            Logger.error(ex);
+            subs = twitchClient.getHelix().getEventSubSubscriptions(null, null, null, null, null, null).execute();
+        } catch (Exception e) {
+            Logger.error(e);
             return null;
         }
 

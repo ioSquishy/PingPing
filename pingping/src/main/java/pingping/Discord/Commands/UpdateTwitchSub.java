@@ -19,6 +19,7 @@ import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
+import pingping.Exceptions.TwitchApiException;
 import pingping.Twitch.TwitchAPI;
 
 public class UpdateTwitchSub extends DiscordCommand {
@@ -77,7 +78,7 @@ public class UpdateTwitchSub extends DiscordCommand {
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).respond();
-        } catch (DatabaseException e) {
+        } catch (TwitchApiException | DatabaseException e) {
             Logger.error(e);
             response.setContent(e.getMessage()).respond();
         } catch (Exception e) {
@@ -86,7 +87,7 @@ public class UpdateTwitchSub extends DiscordCommand {
         }
     }
 
-    public static void updateSub(long server_id, String streamer, @Nullable Long pingrole_id, @Nullable Long pingchannel_id) throws DatabaseException, InvalidArgumentException {
+    public static void updateSub(long server_id, String streamer, @Nullable Long pingrole_id, @Nullable Long pingchannel_id) throws DatabaseException, InvalidArgumentException, TwitchApiException {
         Logger.trace("Updating twitch sub for channel {} in server {}", streamer, server_id);
         Optional<Long> broadcaster_id = TwitchAPI.getChannelId(streamer);
         if (broadcaster_id.isPresent()) {

@@ -111,11 +111,11 @@ public class TwitchConduit {
     }
 
     /**
-     * returns true if successful
      * @param channel_name
-     * @return
+     * @return event sub id or empty if channel does not exist
+     * @throws TwitchApiException if api request fails
      */
-    public Optional<String> registerSubscription(String channel_name) {
+    public Optional<String> registerSubscription(String channel_name) throws TwitchApiException {
         Optional<Long> channelId = TwitchAPI.getChannelId(channel_name);
         return channelId.isPresent() ? registerSubscription(channelId.get()) : Optional.empty();            
     }
