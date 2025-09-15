@@ -21,7 +21,7 @@ import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
 public class RegisterTwitchSub extends DiscordCommand {
-    public static final String commandName = "RegisterTwitchSub";
+    public static final String commandName = "registertwitchsub";
     static {
         DiscordCommandFactory.registerCommand(commandName, RegisterTwitchSub::new);
     }
@@ -29,7 +29,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         super(commandName, interaction);
     }
     @Override
-    protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
+    public Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
             .setDescription("Registered a twitch subscription for this server.")

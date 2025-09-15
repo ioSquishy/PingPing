@@ -21,8 +21,19 @@ import pingping.Discord.DiscordAPI;
 public class DiscordCommandFactory {
     private static final Map<String, Function<SlashCommandInteraction, DiscordCommand>> registeredCommands = new HashMap<String, Function<SlashCommandInteraction, DiscordCommand>>();
 
-    protected static void registerCommand(String commandName, Function<SlashCommandInteraction, DiscordCommand> command) {
-        Function<SlashCommandInteraction, DiscordCommand> previousRegisteredCommand = registeredCommands.putIfAbsent(commandName.toLowerCase().strip(), command);
+    /**
+     * 
+     * @param commandName
+     * @param command
+     * @throws IllegalArgumentException if commandName is not all lowercase
+     */
+    protected static void registerCommand(String commandName, Function<SlashCommandInteraction, DiscordCommand> command) throws IllegalArgumentException {
+        // if command name isn't all lower case throw error
+        if (!commandName.toLowerCase().equals(commandName)) {
+            throw new IllegalArgumentException("Command name must be all lowercase to conform with Discord command schema.");
+        }
+
+        Function<SlashCommandInteraction, DiscordCommand> previousRegisteredCommand = registeredCommands.putIfAbsent(commandName.strip(), command);
         if (previousRegisteredCommand != null) {
             throw new IllegalArgumentException("Attempted to register a command with duplicate command name: " + commandName);
         } else {
@@ -31,7 +42,7 @@ public class DiscordCommandFactory {
     }
 
     public static DiscordCommand createCommand(String commandName, SlashCommandInteraction commandInteraction) throws IllegalArgumentException {
-        Function<SlashCommandInteraction, DiscordCommand> constructor = registeredCommands.get(commandName.toLowerCase().strip());
+        Function<SlashCommandInteraction, DiscordCommand> constructor = registeredCommands.get(commandName.strip());
         if (constructor == null) {
             throw new IllegalArgumentException("Unknown command name: " + commandName);
         }

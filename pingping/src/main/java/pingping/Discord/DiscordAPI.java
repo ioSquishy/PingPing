@@ -11,13 +11,17 @@ import pingping.Discord.Events.SlashCommandEvent;
 public class DiscordAPI {
     private static DiscordApi api = null;
 
+    public static void connectOnlyApi() {
+        api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
+        Logger.debug("Connected to Discord API.");
+    }
+
     public static void connect() {
         if (api != null) {
             throw new RuntimeException("DiscordAPI.connect() ran again even though API has already been connected to.");
         }
 
-        api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
-        Logger.debug("Connected to Discord API.");
+        connectOnlyApi();
 
         DiscordCommandFactory.forceLoadCommandClasses();
         Logger.debug("Discord API command classes loaded.");
@@ -31,6 +35,10 @@ public class DiscordAPI {
         Logger.info("Discord API Connected");
     }
 
+    /**
+     * Will be null if not previously connected.
+     * @return Javacord API instance
+     */
     public static DiscordApi getAPI() {
         return api;
     }

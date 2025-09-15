@@ -8,7 +8,7 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import pingping.Discord.DiscordAPI;
 
 public class Ping extends DiscordCommand {
-    public static final String commandName = "Ping";
+    public static final String commandName = "ping";
     static {
         DiscordCommandFactory.registerCommand(commandName, Ping::new);
     }

@@ -21,7 +21,7 @@ import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
 public class UnregisterTwitchSub extends DiscordCommand {
-    public static final String commandName = "UnregisterTwitchSub";
+    public static final String commandName = "unregistertwitchsub";
     static {
         DiscordCommandFactory.registerCommand(commandName, UnregisterTwitchSub::new);
     }

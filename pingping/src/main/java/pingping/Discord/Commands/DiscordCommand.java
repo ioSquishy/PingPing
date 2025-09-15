@@ -10,8 +10,8 @@ public abstract class DiscordCommand {
     public final String commandName;
 
     protected DiscordCommand(String commandName, SlashCommandInteraction interaction) {
-        this.interaction = interaction;
         this.commandName = commandName;
+        this.interaction = interaction;
     }
     
     /**

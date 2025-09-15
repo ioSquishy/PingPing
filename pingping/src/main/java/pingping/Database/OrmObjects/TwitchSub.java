@@ -9,10 +9,10 @@ public class TwitchSub {
 
     public static enum Columns {
         SERVER_ID("server_id", null), // INTEGER
-        BROADCASTER_ID("broadcaster_id", "Streamer"), // INTEGER
+        BROADCASTER_ID("broadcaster_id", "streamer"), // INTEGER
         EVENTSUB_ID("eventsub_id", null), // STRING
-        PINGROLE_ID("pingrole_id", "Role"), // INTEGER
-        PINGCHANNEL_ID("pingchannel_id", "Channel"); // INTEGER
+        PINGROLE_ID("pingrole_id", "role"), // INTEGER
+        PINGCHANNEL_ID("pingchannel_id", "channel"); // INTEGER
 
         public final String sql_column_name;
         public final String dcmd_argument_name;

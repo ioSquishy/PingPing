@@ -22,7 +22,7 @@ import pingping.Exceptions.InvalidArgumentException;
 import pingping.Twitch.TwitchAPI;
 
 public class UpdateTwitchSub extends DiscordCommand {
-    public static final String commandName = "UpdateTwitchSub";
+    public static final String commandName = "updatetwitchsub";
     static {
         DiscordCommandFactory.registerCommand(commandName, UpdateTwitchSub::new);
     }

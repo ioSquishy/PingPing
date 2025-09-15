@@ -10,7 +10,9 @@
         "PINGCHANNEL",
         "pingping",
         "PINGROLE",
-        "Unsub"
+        "unregistertwitchsub",
+        "Unsub",
+        "updatetwitchsub"
     ],
     "java.dependency.packagePresentation": "hierarchical"
 }
