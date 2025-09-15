@@ -37,6 +37,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
                 .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setDescription("Streamer to unregister notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
                 .build()));
@@ -49,10 +50,10 @@ public class UnregisterTwitchSub extends DiscordCommand {
             long server_id = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
             unregisterSub(server_id, streamer);
+            response.setContent("Subscription removed.").send();
         } catch (NoSuchElementException e) {
             Logger.error(e, "Discord command argument missing for command: {}", commandName);
             response.setContent("Command failed; Missing an argument.").send();
-            return;
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).send();

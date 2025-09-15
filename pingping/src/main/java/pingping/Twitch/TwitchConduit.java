@@ -36,7 +36,7 @@ public class TwitchConduit {
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
     private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
-        Logger.warn("Existing TwitchConduit not found; Creating new twitch conduit for bot id: {}", bot_id);
+        Logger.warn("Existing TwitchConduit instance not found; Initializing new instance for bot id: {}", bot_id);
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
         if (potentialConduitId == null) {
             Logger.warn("No existing conduit id in database found for bot id {}", bot_id);

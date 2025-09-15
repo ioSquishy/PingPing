@@ -38,6 +38,7 @@ public class UpdateTwitchSub extends DiscordCommand {
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
                 .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setDescription("Streamer to update notification settings for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
                 .build())
@@ -69,10 +70,10 @@ public class UpdateTwitchSub extends DiscordCommand {
             Long channel_id = channel != null ? channel.getId() : null;
 
             updateSub(server_id, streamer, role_id, channel_id);
+            response.setContent("Subscription updated.").send();
         } catch (NoSuchElementException e) {
             Logger.error(e, "Discord command argument missing for command: {}", commandName);
             response.setContent("Command failed; Missing an argument.").send();
-            return;
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).send();

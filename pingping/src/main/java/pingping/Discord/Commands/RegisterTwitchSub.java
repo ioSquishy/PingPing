@@ -29,7 +29,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         super(commandName, interaction);
     }
     @Override
-    public Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
+    protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
             .setDescription("Registered a twitch subscription for this server.")
@@ -37,6 +37,7 @@ public class RegisterTwitchSub extends DiscordCommand {
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
                 .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setDescription("Streamer to register notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
                 .build())
@@ -63,10 +64,10 @@ public class RegisterTwitchSub extends DiscordCommand {
             long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElseThrow().getId();
             long channel_id = this.interaction.getArgumentChannelValueByName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name).orElseThrow().getId();
             registerSub(server_id, streamer, role_id, channel_id);
+            response.setContent("Subscription added.").send();
         } catch (NoSuchElementException e) {
             Logger.error(e, "Discord command argument missing for command: {}", commandName);
             response.setContent("Command failed; Missing an argument.").send();
-            return;
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).send();
