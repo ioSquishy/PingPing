@@ -12,7 +12,7 @@ import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
-import org.javacord.api.interaction.callback.InteractionFollowupMessageBuilder;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
@@ -57,7 +57,7 @@ public class UpdateTwitchSub extends DiscordCommand {
     }
     @Override
     public void runCommand() {
-        InteractionFollowupMessageBuilder response = this.interaction.createFollowupMessageBuilder();
+        InteractionImmediateResponseBuilder response = this.interaction.createImmediateResponder();
         try {
             Logger.trace("UpdateTwitchSub discord command ran.");
             long server_id = this.interaction.getServer().get().getId();
@@ -70,19 +70,19 @@ public class UpdateTwitchSub extends DiscordCommand {
             Long channel_id = channel != null ? channel.getId() : null;
 
             updateSub(server_id, streamer, role_id, channel_id);
-            response.setContent("Subscription updated.").send();
+            response.setContent("Subscription updated for: " + streamer).respond();
         } catch (NoSuchElementException e) {
             Logger.error(e, "Discord command argument missing for command: {}", commandName);
-            response.setContent("Command failed; Missing an argument.").send();
+            response.setContent("Command failed; Missing an argument.").respond();
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
-            response.setContent(e.getMessage()).send();
+            response.setContent(e.getMessage()).respond();
         } catch (DatabaseException e) {
             Logger.error(e);
-            response.setContent(e.getMessage()).send();
+            response.setContent(e.getMessage()).respond();
         } catch (Exception e) {
             Logger.error(e, "Unforeseen exception in command: {}", commandName);
-            response.setContent("Command failed for unforeseen reason...").send();
+            response.setContent("Command failed for unforeseen reason...").respond();
         }
     }
 

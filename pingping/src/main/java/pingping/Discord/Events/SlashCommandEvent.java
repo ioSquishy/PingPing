@@ -21,6 +21,8 @@ public class SlashCommandEvent {
                     Logger.error(e);
                 } catch (UnsupportedOperationException e) {
                     Logger.error(e);
+                } catch (Exception e) {
+                    Logger.error(e);
                 }
             });
             Logger.trace("Registered SlashCommandCreateListener");
