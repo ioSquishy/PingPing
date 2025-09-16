@@ -25,7 +25,7 @@ public class Database {
         Logger.trace("Creating base tables for database.");
 
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
-            GlobalTable.Columns.BOT_ID + " INTEGER PRIMARY KEY," +
+            GlobalTable.Columns.INSTANCE_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
             ");";
         Logger.trace("Global table SQL: {}", globalTable);
@@ -112,7 +112,7 @@ public class Database {
     public class GlobalTable {
         public static final String tableName = "global";
         public static enum Columns {
-            BOT_ID("bot_id"),
+            INSTANCE_ID("instance_id"),
             TWITCH_CONDUIT_ID("twitch_conduit_id"); // max of 5 conduits per twitch user account
 
             public final String sqlColumnName;
@@ -125,70 +125,70 @@ public class Database {
             }
         }
 
-        public static void insertRow(long bot_id) throws DatabaseException {
-            final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.BOT_ID+") VALUES(?)";
-            Logger.trace("SQL: {}\n?: {}", sql, bot_id);
+        public static void insertRow(long instance_id) throws DatabaseException {
+            final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.INSTANCE_ID+") VALUES(?)";
+            Logger.trace("SQL: {}\n?: {}", sql, instance_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-                statement.setLong(1, bot_id);
+                statement.setLong(1, instance_id);
                 statement.executeUpdate();
-                Logger.debug("Inserted bot id {} into {}", bot_id, tableName);
+                Logger.debug("Inserted instance id {} into {}", instance_id, tableName);
             } catch (SQLException e) {
-                Logger.error(e, "Failed to insert bot id {} into {}", bot_id, tableName);
-                throw new DatabaseException("Failed to store bot id in database.");
+                Logger.error(e, "Failed to insert instance id {} into {}", instance_id, tableName);
+                throw new DatabaseException("Failed to store instance id in database.");
             }
         }
 
         /**
-         * @param bot_id
+         * @param instance_id
          * @param conduit_id
          * @throws DatabaseException if fails to connect to database or set conduit
          */
-        public static void setConduitId(long bot_id, String conduit_id) throws DatabaseException {
+        public static void setConduitId(long instance_id, String conduit_id) throws DatabaseException {
             final String sql = "UPDATE " + tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
-                " WHERE " + Columns.BOT_ID + " = ?";
-            Logger.trace("SQL: {}\n?: {}, {}", sql, conduit_id, bot_id);
+                " WHERE " + Columns.INSTANCE_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}, {}", sql, conduit_id, instance_id);
 
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setString(1, conduit_id);
-                statement.setLong(2, bot_id);
+                statement.setLong(2, instance_id);
                 statement.executeUpdate();
-                Logger.debug("Set conduit id for bot id {} to {}", bot_id, conduit_id);
+                Logger.debug("Set conduit id for instance id {} to {}", instance_id, conduit_id);
             } catch (SQLException e) {
-                Logger.error(e, "Failed to set conduit id for bot id {} to {}", bot_id, conduit_id);
+                Logger.error(e, "Failed to set conduit id for instance id {} to {}", instance_id, conduit_id);
                 throw new DatabaseException("Failed to set conduit id in database.");
             }
         }
 
-        public static void putConduitId(long bot_id, String conduit_id) throws DatabaseException {
-            if (getConduitId(bot_id) == null) {
-                insertRow(bot_id);
+        public static void putConduitId(long instance_id, String conduit_id) throws DatabaseException {
+            if (getConduitId(instance_id) == null) {
+                insertRow(instance_id);
             }
-            setConduitId(bot_id, conduit_id);
+            setConduitId(instance_id, conduit_id);
         }
 
         /**
          * 
-         * @param bot_id
+         * @param instance
          * @return
          * @throws DatabaseException if fails to connect to database
          */
-        public static @Nullable String getConduitId(long bot_id) throws DatabaseException {
+        public static @Nullable String getConduitId(long instance_id) throws DatabaseException {
             final String sql = "SELECT " + Columns.TWITCH_CONDUIT_ID + 
                 " FROM " + tableName + 
-                " WHERE " + Columns.BOT_ID + " = ? " +
+                " WHERE " + Columns.INSTANCE_ID + " = ? " +
                 " LIMIT 1";
-            Logger.trace("SQL: {}\n?: {}", sql, bot_id);
+            Logger.trace("SQL: {}\n?: {}", sql, instance_id);
             
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-                statement.setLong(1, bot_id);
+                statement.setLong(1, instance_id);
                 ResultSet result = statement.executeQuery();
                 if (!result.next()) {
-                    Logger.debug("getConduitId() did not retrieve any results for bot id {}", bot_id);
+                    Logger.debug("getConduitId() did not retrieve any results for instance id {}", instance_id);
                 }
                 return result.getString(Columns.TWITCH_CONDUIT_ID.sqlColumnName);
             } catch (SQLException e) {
-                Logger.warn(e, "SQLException when attempting to retrieve conduit id for bot id {}", bot_id);
+                Logger.warn(e, "SQLException when attempting to retrieve conduit id for instance id {}", instance_id);
                 throw new DatabaseException("Failed to get conduit id from database.");
             }
         }
@@ -283,7 +283,29 @@ public class Database {
                 result_set.getLong(TwitchSub.Columns.PINGCHANNEL_ID.sql_column_name));
         }
 
-        public static List<TwitchSub> pullTwitchSubs(long server_id) throws DatabaseException {
+        public static List<TwitchSub> pullTwitchSubsFromBroadcasterId(long broadcaster_id) throws DatabaseException {
+            final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
+                " FROM " + TwitchSubsTable.tableName +
+                " WHERE " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
+
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                statement.setLong(1, broadcaster_id);
+                ResultSet resultSet = statement.executeQuery();
+
+                List<TwitchSub> subs = new ArrayList<TwitchSub>();
+                while (resultSet.next()) {
+                    subs.add(createSubFromResultSet(resultSet));
+                }
+                Logger.trace("Pulled {} subscriptions with broadcaster_id {}", subs.size(), broadcaster_id);
+                return subs;
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to pull twitch subs with broadcaster id {}.", broadcaster_id);
+                throw new DatabaseException("Failed to pull twitch subs from database.");
+            }
+        }
+
+        public static List<TwitchSub> pullTwitchSubsFromServerId(long server_id) throws DatabaseException {
             final String sql = "SELECT " + TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID +
                 " FROM " + TwitchSubsTable.tableName +
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?";
@@ -299,7 +321,7 @@ public class Database {
                 }
                 return subs;
             } catch (SQLException e) {
-                Logger.error(e, "Failed to pull twitch subs for server id {}.", server_id);
+                Logger.error(e, "Failed to pull twitch subs with server id {}.", server_id);
                 throw new DatabaseException("Failed to pull twitch subs from database.");
             }
         }

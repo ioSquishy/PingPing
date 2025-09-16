@@ -16,12 +16,12 @@ import com.github.twitch4j.eventsub.socket.conduit.exceptions.ConduitResizeExcep
 import com.github.twitch4j.eventsub.socket.conduit.exceptions.CreateConduitException;
 import com.github.twitch4j.eventsub.socket.conduit.exceptions.ShardRegistrationException;
 import com.github.twitch4j.eventsub.socket.conduit.exceptions.ShardTimeoutException;
-import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionFailureEvent;
-import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionSuccessEvent;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import pingping.Main;
 import pingping.Database.Database;
+import pingping.Discord.Events.TwitchStreamEvent;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.TwitchApiException;
 
@@ -73,7 +73,6 @@ public class TwitchConduit {
             Logger.trace("Conduit created with id: {}", conduit.getConduitId());
             return true;
         } catch (ConduitNotFoundException e) {
-            // TODO create new conduit and recreate subscriptions pulling from database
             Logger.warn(e, "Conduit with id {} not found. Creating new conduit...", potentialConduitId);
             // create new conduit
             if (!setConduit(null)) {
@@ -81,7 +80,9 @@ public class TwitchConduit {
                 return false;
             }
             Logger.info("New conduit created with id {}", conduit.getConduitId());
+            
             // pull subscriptions from database and recreate them
+            // TODO recreate subscriptions by pulling from database
             
             return true;
         } catch (CreateConduitException | ShardTimeoutException | ConduitResizeException | ShardRegistrationException e) {
@@ -91,22 +92,28 @@ public class TwitchConduit {
     }
 
     private void registerEventListeners() {
-        Logger.info("Registered event listeners for conduit {}", conduit.getConduitId());
         IEventManager eventManager = conduit.getEventManager();
-        eventManager.onEvent(StreamOnlineEvent.class, System.out::println);
-        eventManager.onEvent(EventSocketSubscriptionSuccessEvent.class, System.out::println);
-        eventManager.onEvent(EventSocketSubscriptionFailureEvent.class, System.out::println);
+        eventManager.onEvent(StreamOnlineEvent.class, TwitchStreamEvent::handleStreamOnlineEvent);
+        Logger.trace("Registered StreamOnlineEvent listener for conduit {}", conduit.getConduitId());
+
+        Logger.info("Registered event listeners for conduit {}", conduit.getConduitId());
     }
 
+
     /**
-     * 
-     * @param bot_id
-     * @return
      * @throws TwitchApiException if conduit registration unsuccessful
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
-    public static TwitchConduit getConduit(long bot_id) throws TwitchApiException, DatabaseException {
-        TwitchConduit con = self == null ? new TwitchConduit(bot_id) : self;
+    public static TwitchConduit getConduit() throws TwitchApiException, DatabaseException {
+        return getConduit(Main.INSTANCE_ID);
+    }
+
+    /**
+     * @throws TwitchApiException if conduit registration unsuccessful
+     * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
+     */
+    private static TwitchConduit getConduit(byte instance_id) throws TwitchApiException, DatabaseException {
+        TwitchConduit con = self == null ? new TwitchConduit(instance_id) : self;
         return con;
     }
 

@@ -13,7 +13,6 @@ import org.tinylog.Logger;
 
 import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
-import pingping.Discord.DiscordAPI;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
@@ -99,7 +98,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
 
         // register sub through twitch api and get event_sub id
-        Optional<String> subId = TwitchConduit.getConduit(DiscordAPI.getBotId()).registerSubscription(broadcaster_id);
+        Optional<String> subId = TwitchConduit.getConduit().registerSubscription(broadcaster_id);
         if (subId.isEmpty()) {
             throw new TwitchApiException("Subscription registration through Twitch API was unsuccessful.");
         }
@@ -114,7 +113,7 @@ public class RegisterTwitchSub extends DiscordCommand {
             Logger.error(e, "Successfully found and subscripted new twitch sub, but failed to add entry to database. Reverting changes...");
             // revert changes
             try {
-                TwitchConduit.getConduit(DiscordAPI.getBotId()).unregisterSubscription(sub.eventsub_id);
+                TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
                 throw e;
             } catch (Exception e2) {
                 Logger.error(e2, "Failed to revert changes.");

@@ -13,7 +13,6 @@ import org.tinylog.Logger;
 
 import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
-import pingping.Discord.DiscordAPI;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
@@ -83,7 +82,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
         }
 
-        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit(DiscordAPI.getBotId()).unregisterSubscription(sub.eventsub_id);
+        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
         if (twitchApiUnsubSuccess == false) {
             throw new TwitchApiException("Failed to unregister subscription with Twitch API.");
         }
@@ -94,7 +93,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             Logger.error(e, "Successfully found and removed twitch subscription but failed to remove entry from database. Reverting changes...");
             // revert changes
             try {
-                TwitchConduit.getConduit(DiscordAPI.getBotId()).registerSubscription(broadcaster_id);
+                TwitchConduit.getConduit().registerSubscription(broadcaster_id);
                 throw e;
             } catch (Exception e2) {
                 Logger.error(e2, "Failed to revert changes.");

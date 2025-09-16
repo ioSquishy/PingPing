@@ -93,7 +93,7 @@ public class TwitchAPI {
         }
     }
 
-    public static List<EventSubSubscription> getEventSubSubs() {
+    public static List<EventSubSubscription> getEventSubscriptions() {
         EventSubSubscriptionList subs;
         try {
             subs = twitchClient.getHelix().getEventSubSubscriptions(null, null, null, null, null, null).execute();
