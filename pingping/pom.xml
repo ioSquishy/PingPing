@@ -14,41 +14,46 @@
     </properties>
 
     <dependencies>
+        <!-- database -->
         <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.50.3.0</version>
         </dependency>
+
+        <!-- misc -->
         <!-- https://mvnrepository.com/artifact/org.reflections/reflections -->
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>java-dotenv</artifactId>
             <version>5.2.2</version>
         </dependency>
+
+        <!-- main dependencies -->
+        <!-- https://mvnrepository.com/artifact/org.javacord/javacord -->
         <dependency>
             <groupId>org.javacord</groupId>
             <artifactId>javacord</artifactId>
             <version>3.8.0</version>
             <type>pom</type>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.twitch4j/twitch4j-common -->
         <dependency>
             <groupId>com.github.twitch4j</groupId>
             <artifactId>twitch4j</artifactId>
             <version>1.25.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.17</version>
-        </dependency>
-        <!-- tinylog -->
+
+        <!-- logging -->
+        <!-- tinylog core -->
+        <!-- https://tinylog.org/download/#java -->
         <dependency>
             <groupId>org.tinylog</groupId>
             <artifactId>tinylog-api</artifactId>
@@ -59,11 +64,39 @@
             <artifactId>tinylog-impl</artifactId>
             <version>2.7.0</version>
         </dependency>
+
+        <!-- tinylog binds -->
+        <!-- slf4j: captures logs from twitch4j -->
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+        </dependency>
+
+        <!-- log4j: captures logs from javacord and sends to slf4j -->
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.25.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-to-slf4j -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <version>2.25.1</version>
+        </dependency>
+
+        <!-- captures logs from slf4j and sends to tinylog -->
+        <!-- https://tinylog.org/download/#slf4j -->
+        <!-- "no other binding than slf4j-tinylog [may exist]" -->
         <dependency>
             <groupId>org.tinylog</groupId>
             <artifactId>slf4j-tinylog</artifactId>
             <version>2.7.0</version>
         </dependency>
+
     </dependencies>
 
 </project>
