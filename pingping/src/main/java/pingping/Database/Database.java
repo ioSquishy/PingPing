@@ -356,6 +356,30 @@ public class Database {
             }
         }
 
+        /**
+         * pulls all distinct broadcaster ids that have been subscribed to in the database
+         * @throws DatabaseException if sql fails for some reason
+         */
+        public static List<String> pullSubscriptionBroadcasterIds() throws DatabaseException {
+            final String sql = "SELECT DISTINCT " + TwitchSub.Columns.BROADCASTER_ID +
+                "FROM " + TwitchSubsTable.tableName;
+            Logger.trace("SQL: {}", sql);
+
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                ResultSet resultSet = statement.executeQuery();
+
+                List<String> subIds = new ArrayList<String>();
+                while (resultSet.next()) {
+                    subIds.add(resultSet.getString(TwitchSub.Columns.BROADCASTER_ID.sql_column_name));
+                }
+                Logger.trace("Pulled {} distinct broadcaster ids from database. {}", subIds.size());
+                return subIds;
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to pull subscription ids.");
+                throw new DatabaseException("Failed to pull subscription ids from database.");
+            }
+        }
+
         public static List<String> pullSubscriptionBroadcasterIds(long server_id) throws DatabaseException {
             final String sql = "SELECT " + TwitchSub.Columns.BROADCASTER_ID +
                 " FROM " + TwitchSubsTable.tableName +

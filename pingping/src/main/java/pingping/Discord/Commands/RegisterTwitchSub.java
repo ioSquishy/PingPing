@@ -81,13 +81,9 @@ public class RegisterTwitchSub extends DiscordCommand {
 
     public static void registerSub(long server_id, String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
         Logger.trace("Registering twitch sub for streamer {} in server {}", twitch_channel, server_id);
-        Optional<Long> broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
-        if (broadcaster_id.isPresent()) {
-            registerSub(server_id, broadcaster_id.get(), pingrole_id, pingchannel_id);
-            Logger.debug("Registered twitch sub for streamer {} in server {}", twitch_channel, server_id);
-        } else {
-            throw new InvalidArgumentException("Could not find twitch streamer with name: " + twitch_channel);
-        }
+        long broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
+        registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id);
+        Logger.debug("Registered twitch sub for streamer {} in server {}", twitch_channel, server_id);
     }
 
     private static void registerSub(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) throws TwitchApiException, DatabaseException, InvalidArgumentException {
@@ -98,13 +94,10 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
 
         // register sub through twitch api and get event_sub id
-        Optional<String> subId = TwitchConduit.getConduit().registerSubscription(broadcaster_id);
-        if (subId.isEmpty()) {
-            throw new TwitchApiException("Subscription registration through Twitch API was unsuccessful.");
-        }
+        String subId = TwitchConduit.getConduit().registerSubscription(broadcaster_id);
 
         // package sub details into a TwitchSub
-        TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId.get(), pingrole_id, pingchannel_id);
+        TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId, pingrole_id, pingchannel_id);
         
         // store TwitchSub in database
         try {

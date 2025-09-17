@@ -89,13 +89,9 @@ public class UpdateTwitchSub extends DiscordCommand {
 
     public static void updateSub(long server_id, String streamer, @Nullable Long pingrole_id, @Nullable Long pingchannel_id) throws DatabaseException, InvalidArgumentException, TwitchApiException {
         Logger.trace("Updating twitch sub for channel {} in server {}", streamer, server_id);
-        Optional<Long> broadcaster_id = TwitchAPI.getChannelId(streamer);
-        if (broadcaster_id.isPresent()) {
-            updateSub(server_id, broadcaster_id.get(), Optional.ofNullable(pingrole_id), Optional.ofNullable(pingchannel_id));
-            Logger.debug("Updated twitch sub for streamer {} in server {}", streamer, server_id);
-        } else {
-            throw new InvalidArgumentException("Could not find streamer with name: " + streamer);
-        }
+        long broadcaster_id = TwitchAPI.getChannelId(streamer);
+        updateSub(server_id, broadcaster_id, Optional.ofNullable(pingrole_id), Optional.ofNullable(pingchannel_id));
+        Logger.debug("Updated twitch sub for streamer {} in server {}", streamer, server_id);
     }
 
     private static void updateSub(long server_id, long broadcaster_id, Optional<Long> pingrole_id, Optional<Long> pingchannel_id) throws DatabaseException {

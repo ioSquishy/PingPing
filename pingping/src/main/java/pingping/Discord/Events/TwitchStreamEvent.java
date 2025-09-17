@@ -15,16 +15,16 @@ public class TwitchStreamEvent {
     public static void handleStreamOnlineEvent(StreamOnlineEvent event) {
         long broadcasterId = Long.parseLong(event.getBroadcasterUserId());
         try {
-            handleStreamOnlineEvent(broadcasterId);
+            handleStreamOnlineEvent(broadcasterId, event.getBroadcasterUserName());
         } catch (DatabaseException e) {
             Logger.error(e, "Failed to handle stream online event for broadcaster with id {}", broadcasterId);
         }
     }
 
-    public static void handleStreamOnlineEvent(long broadcaster_id) throws DatabaseException {
+    public static void handleStreamOnlineEvent(long broadcaster_id, String streamer_name) throws DatabaseException {
         List<TwitchSub> subscriptions = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcaster_id);
         subscriptions.forEach(sub -> {
-            PushStreamNotification.pushTwitchStreamNotification(sub);
+            PushStreamNotification.pushTwitchStreamNotification(sub, streamer_name);
         });
     }
 }

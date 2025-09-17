@@ -1,7 +1,7 @@
 package pingping.Twitch;
 
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
@@ -23,6 +23,7 @@ import pingping.Main;
 import pingping.Database.Database;
 import pingping.Discord.Events.TwitchStreamEvent;
 import pingping.Exceptions.DatabaseException;
+import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
 
 public class TwitchConduit {
@@ -83,6 +84,22 @@ public class TwitchConduit {
             
             // pull subscriptions from database and recreate them
             // TODO recreate subscriptions by pulling from database
+            try {
+                List<String> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
+                subBroadcasterIds.forEach(id -> {
+                    try {
+                        registerSubscription(id);
+                        // TODO update subscription to have new event sub id
+                    } catch (TwitchApiException e1) {
+                        Logger.error(e1, "Failed to register subscription for broadcaster id {}", id);
+                    } catch (InvalidArgumentException e1) {
+                        Logger.error("Failed to recreate subscription for broadcaster id {}", id);
+                    }
+                });
+            } catch (DatabaseException e1) {
+                Logger.error(e1, "Failed to create new conduit.");
+                return false;
+            }
             
             return true;
         } catch (CreateConduitException | ShardTimeoutException | ConduitResizeException | ShardRegistrationException e) {
@@ -119,27 +136,29 @@ public class TwitchConduit {
 
     /**
      * @param channel_name
-     * @return event sub id or empty if channel does not exist
+     * @return event sub id
      * @throws TwitchApiException if api request fails
+     * @throws InvalidArgumentException if channel id could not be found
      */
-    public Optional<String> registerSubscription(String channel_name) throws TwitchApiException {
-        Optional<Long> channelId = TwitchAPI.getChannelId(channel_name);
-        return channelId.isPresent() ? registerSubscription(channelId.get()) : Optional.empty();            
+    public String registerSubscription(String channel_name) throws TwitchApiException, InvalidArgumentException {
+        long channelId = TwitchAPI.getChannelId(channel_name);
+        return registerSubscription(channelId);            
     }
 
     /**
      * 
-     * @param channel_id
-     * @return empty if unsuccessful
+     * @param broadcaster_id
+     * @return event sub id
+     * @throws TwitchApiException if  registration failed
      */
-    public Optional<String> registerSubscription(long broadcaster_id) {
+    public String registerSubscription(long broadcaster_id) throws TwitchApiException {
         try {
             EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+broadcaster_id).build()).orElseThrow();
             Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
-            return Optional.of(sub.getId());
+            return sub.getId();
         } catch (NoSuchElementException e) {
             Logger.debug("Could not create subscription for broadcaster_id: {}", broadcaster_id);
-            return Optional.empty();
+            throw new TwitchApiException("Subscription registration through Twitch API unsuccessful.");
         }
     }
 

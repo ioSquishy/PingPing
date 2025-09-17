@@ -11,7 +11,7 @@ import pingping.Discord.DiscordAPI;
 import pingping.Exceptions.DatabaseException;
 
 public class PushStreamNotification {
-    public static void pushTwitchStreamNotification(TwitchSub twitchSub) {
+    public static void pushTwitchStreamNotification(TwitchSub twitchSub, String streamer_name) {
         Logger.trace("Pushing stream notification for broadcaster id {} in server id {}", twitchSub.broadcaster_id, twitchSub.server_id);
 
         Optional<Server> optionalServer = DiscordAPI.getAPI().getServerById(twitchSub.server_id);
@@ -30,7 +30,7 @@ public class PushStreamNotification {
         server.getChannelById(twitchSub.pingchannel_id).ifPresentOrElse(generalDiscordChannel -> {
             generalDiscordChannel.asServerTextChannel().ifPresentOrElse(discordServerTextChannel -> {
                 server.getRoleById(twitchSub.pingrole_id).ifPresentOrElse(discordPingRole -> {
-
+                    discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " " + streamer_name + " went live!");
                 }, () -> { Logger.debug("Discord role with id {} in {} does not exist", twitchSub.pingrole_id, twitchSub.server_id); });
             }, () -> { Logger.debug("Discord channel with id {} in server {} is not a ServerTextChannel", twitchSub.pingchannel_id, twitchSub.server_id);} );
         }, () -> { Logger.debug("Discord channel with id {} in server {} does not exist", twitchSub.pingchannel_id, twitchSub.server_id);} );

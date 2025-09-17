@@ -1,6 +1,7 @@
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
+import pingping.Discord.DiscordAPI;
 import pingping.Discord.Events.TwitchStreamEvent;
 import pingping.Exceptions.DatabaseException;
 import pingping.Twitch.TwitchAPI;
@@ -11,6 +12,7 @@ public class Test {
     public static void main(String[] args) {
         try {
             Database.getConnection();
+            DiscordAPI.connect();
             TwitchConduit.getConduit();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
@@ -18,7 +20,7 @@ public class Test {
         }
 
         try {
-            TwitchStreamEvent.handleStreamOnlineEvent(82350088L);
+            TwitchStreamEvent.handleStreamOnlineEvent(82350088L, "idk");
         } catch (DatabaseException e) {
             e.printStackTrace();
         }

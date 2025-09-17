@@ -1,7 +1,6 @@
 package pingping.Twitch;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -13,11 +12,14 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.eventsub.Conduit;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.helix.domain.EventSubSubscriptionList;
+import com.github.twitch4j.helix.domain.Stream;
+import com.github.twitch4j.helix.domain.StreamList;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 import com.netflix.hystrix.HystrixCommand;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
 
 public class TwitchAPI {
@@ -28,10 +30,12 @@ public class TwitchAPI {
         .build();
     
     /**
-     * 
      * @throws TwitchApiException if api request fails
      */
-    public static List<User> getUsers(@Nullable List<String> userIds, @Nullable List<String> userNames) throws TwitchApiException {
+    private static List<User> getUsers(@Nullable List<String> userIds, @Nullable List<String> userNames) throws TwitchApiException {
+        if (userIds == null && userNames == null) {
+            Logger.warn("getStreams called with both userIds and userNames set to null");
+        }
         try {
             UserList queryResult = twitchClient.getHelix().getUsers(null, userIds, userNames).execute();
             return queryResult.getUsers();
@@ -41,15 +45,35 @@ public class TwitchAPI {
         }
     }
 
-    public static Optional<Long> getChannelId(@NotNull String channelName) throws TwitchApiException {
+    /**
+     * @throws TwitchApiException if api request fails
+     */
+    private static List<Stream> getStreams(@Nullable List<String> userIds, @Nullable List<String> userNames) throws TwitchApiException {
+        if (userIds == null && userNames == null) {
+            Logger.warn("getStreams called with both userIds and userNames set to null");
+        }
+        try {
+            StreamList queryResult = twitchClient.getHelix().getStreams(null, null, null, null, null, null, userIds, userNames).execute();
+            return queryResult.getStreams();
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new TwitchApiException("Failed to retrieve stream(s) from Twitch API.");
+        }
+    }
+
+    // public static Stream getStream(long broadcaster_id) {
+
+    // }
+
+    public static long getChannelId(@NotNull String channelName) throws TwitchApiException, InvalidArgumentException {
         List<User> users = getUsers(null, List.of(channelName));
         if (!users.isEmpty()) {
-            Long channelId = Long.valueOf(users.get(0).getId());
+            long channelId = Long.parseLong(users.get(0).getId());
             Logger.trace("getChannelId({}) -> {}", channelName, channelId);
-            return Optional.of(channelId);
+            return channelId;
         }
         Logger.debug("Could not retrieve channel id of channel: {}", channelName);
-        return Optional.empty();
+        throw new InvalidArgumentException("Could not find streamer with name: " + channelName);
     }
 
     public static void deleteAllExistingConduits() {
