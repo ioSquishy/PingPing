@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
@@ -160,7 +161,7 @@ public class Database {
          * @param conduit_id
          * @throws DatabaseException if fails to connect to database or set conduit
          */
-        public static void setConduitId(long instance_id, String conduit_id) throws DatabaseException {
+        public static void setConduitId(long instance_id, @NotNull String conduit_id) throws DatabaseException {
             final String sql = "UPDATE " + GlobalTable.tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
                 " WHERE " + Columns.INSTANCE_ID + " = ?";
@@ -177,7 +178,7 @@ public class Database {
             }
         }
 
-        public static void putConduitId(long instance_id, String conduit_id) throws DatabaseException {
+        public static void putConduitId(long instance_id, @NotNull String conduit_id) throws DatabaseException {
             if (getConduitId(instance_id) == null) {
                 insertRow(instance_id);
             }
@@ -261,11 +262,11 @@ public class Database {
         public static final String tableName = "twitch_subscriptions";
         
 
-        public static void insertSubscription(TwitchSub sub) throws DatabaseException {
+        public static void insertSubscription(@NotNull TwitchSub sub) throws DatabaseException {
             insertSubscription(sub.server_id, sub.broadcaster_id, sub.eventsub_id, sub.pingrole_id, sub.pingchannel_id);
         }
 
-        public static void insertSubscription(long server_id, long broadcaster_id, String eventsub_id, long pingrole_id, long pingchannel_id) throws DatabaseException {
+        public static void insertSubscription(long server_id, long broadcaster_id, @NotNull String eventsub_id, long pingrole_id, long pingchannel_id) throws DatabaseException {
             final String sql = "INSERT OR IGNORE INTO " +
                 TwitchSubsTable.tableName+"("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID+")" + 
                 " VALUES(?,?,?,?,?)";
@@ -377,7 +378,7 @@ public class Database {
          * pulls all distinct broadcaster ids that have been subscribed to in the database
          * @throws DatabaseException if sql fails for some reason
          */
-        public static List<String> pullSubscriptionBroadcasterIds() throws DatabaseException {
+        public static List<Long> pullSubscriptionBroadcasterIds() throws DatabaseException {
             final String sql = "SELECT DISTINCT " + TwitchSub.Columns.BROADCASTER_ID +
                 "FROM " + TwitchSubsTable.tableName;
             Logger.trace("SQL: {}", sql);
@@ -385,9 +386,9 @@ public class Database {
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 ResultSet resultSet = statement.executeQuery();
 
-                List<String> subIds = new ArrayList<String>();
+                List<Long> subIds = new ArrayList<Long>();
                 while (resultSet.next()) {
-                    subIds.add(resultSet.getString(TwitchSub.Columns.BROADCASTER_ID.sql_column_name));
+                    subIds.add(resultSet.getLong(TwitchSub.Columns.BROADCASTER_ID.sql_column_name));
                 }
                 Logger.trace("Pulled {} distinct broadcaster ids from database. {}", subIds.size());
                 return subIds;
@@ -435,7 +436,24 @@ public class Database {
             }
         }
 
-        public static void updateSubscription(long server_id, long broadcaster_id, String updated_eventsub_id, long updated_pingrole_id, long updated_pingchannel_id) throws DatabaseException {
+        public static void setEventSubId(long broadcaster_id, @NotNull String event_sub_id) throws DatabaseException {
+            final String sql = "UPDATE " + TwitchSubsTable.tableName +
+                " SET " + TwitchSub.Columns.EVENTSUB_ID + " = ?" +
+                " WHERE " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
+            Logger.trace("SQL: {}\n?: {}", event_sub_id, broadcaster_id);
+
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                statement.setString(1, event_sub_id);
+                statement.setLong(2, broadcaster_id);
+                statement.executeUpdate();
+                Logger.debug("Updated eventSubIds in database for broadcasters with id {} to {}", event_sub_id, broadcaster_id);
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to update eventSubIds in database for broadcasters with id {} to {}", event_sub_id, broadcaster_id);
+                throw new DatabaseException("Failed to update eventSubIds in database.");
+            }
+        }
+
+        public static void updateSubscription(long server_id, long broadcaster_id, @NotNull String updated_eventsub_id, long updated_pingrole_id, long updated_pingchannel_id) throws DatabaseException {
             final String sql = "UPDATE " + TwitchSubsTable.tableName + 
                 " SET " + TwitchSub.Columns.EVENTSUB_ID + " = ? ," + 
                     TwitchSub.Columns.PINGROLE_ID + " = ? ," +
@@ -458,7 +476,7 @@ public class Database {
             }
         }
 
-        public static void updateSubscription(TwitchSub updated_twitch_sub) throws DatabaseException {
+        public static void updateSubscription(@NotNull TwitchSub updated_twitch_sub) throws DatabaseException {
             updateSubscription(updated_twitch_sub.server_id, updated_twitch_sub.broadcaster_id, updated_twitch_sub.eventsub_id, updated_twitch_sub.pingrole_id, updated_twitch_sub.pingchannel_id);
         }
     }

@@ -2,6 +2,7 @@ package pingping.Twitch;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
@@ -86,16 +87,15 @@ public class TwitchConduit {
             Logger.info("New conduit created with id {}", conduit.getConduitId());
             
             // pull subscriptions from database and recreate them
-            // TODO recreate subscriptions by pulling from database
             try {
-                List<String> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
+                List<Long> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
                 subBroadcasterIds.forEach(id -> {
                     try {
-                        registerSubscription(id);
-                        // TODO update subscription to have new event sub id
+                        String newEventSubId = registerSubscription(id);
+                        Database.TwitchSubsTable.setEventSubId(id, newEventSubId);
                     } catch (TwitchApiException e1) {
                         Logger.error(e1, "Failed to register subscription for broadcaster id {}", id);
-                    } catch (InvalidArgumentException e1) {
+                    } catch (DatabaseException e1) {
                         Logger.error("Failed to recreate subscription for broadcaster id {}", id);
                     }
                 });
@@ -149,16 +149,22 @@ public class TwitchConduit {
     }
 
     /**
-     * 
-     * @param broadcaster_id
-     * @return event sub id
-     * @throws TwitchApiException if  registration failed
+     * Registers a STREAM_ONLINE subscription for the specified broadcaster id.
+     * If a subscription already exists, the method will return the existing eventSubId. Otherwise, a new subscription is created.
+     * @param broadcaster_id to create STREAM_ONLINE subscription for
+     * @return event sub id of new or existing subscription
+     * @throws TwitchApiException if registration failed
      */
     public String registerSubscription(long broadcaster_id) throws TwitchApiException {
         try {
-            EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+broadcaster_id).build()).orElseThrow();
-            Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
-            return sub.getId();
+            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("82350088").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
+            if (existingSub.isPresent()) {
+                return existingSub.get().getId();
+            } else {
+                EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+broadcaster_id).build()).orElseThrow();
+                Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
+                return sub.getId();
+            }
         } catch (NoSuchElementException e) {
             Logger.debug("Could not create subscription for broadcaster_id: {}", broadcaster_id);
             throw new TwitchApiException("Subscription registration through Twitch API unsuccessful.");

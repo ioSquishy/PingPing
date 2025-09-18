@@ -11,7 +11,7 @@ import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.eventsub.Conduit;
 import com.github.twitch4j.eventsub.EventSubSubscription;
-import com.github.twitch4j.helix.domain.EventSubSubscriptionList;
+import com.github.twitch4j.eventsub.EventSubSubscriptionStatus;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.StreamList;
 import com.github.twitch4j.helix.domain.User;
@@ -139,16 +139,25 @@ public class TwitchAPI {
         }
     }
 
-    public static List<EventSubSubscription> getEventSubscriptions() {
-        EventSubSubscriptionList subs;
+    /**
+     * Get enabled event subscriptions
+     * @param userId if not null, will pull enabled subscriptions for this user only
+     */
+    public static List<EventSubSubscription> getEnabledEventSubscriptions(@Nullable String userId) {
+        List<EventSubSubscription> subs;
         try {
-            subs = twitchClient.getHelix().getEventSubSubscriptions(null, null, null, null, null, null).execute();
+            if (userId == null) {
+                subs = twitchClient.getHelix().getEventSubSubscriptions(null, EventSubSubscriptionStatus.ENABLED, null, null, null, null).execute().getSubscriptions();
+            } else {
+                subs = twitchClient.getHelix().getEventSubSubscriptions(null, null, null, userId, null, null).execute().getSubscriptions()
+                    .stream().filter(sub -> sub.getStatus().equals(EventSubSubscriptionStatus.ENABLED)).toList();
+            }
         } catch (Exception e) {
             Logger.error(e);
             return null;
         }
 
-        return subs.getSubscriptions();
+        return subs;
     }
 }
 

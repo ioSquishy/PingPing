@@ -1,4 +1,9 @@
+import java.util.Optional;
+
 import org.tinylog.Logger;
+
+import com.github.twitch4j.eventsub.EventSubSubscription;
+import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import pingping.Database.Database;
 import pingping.Database.Database.TwitchSubsTable;
@@ -17,7 +22,7 @@ public class Test {
     public static void main(String[] args) {
         try {
             Database.getConnection();
-            DiscordAPI.connect();
+            // DiscordAPI.connect();
             TwitchConduit.getConduit();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
@@ -25,7 +30,10 @@ public class Test {
         }
 
         try {
-            
+            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("82350088").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
+            if (existingSub.isPresent()) {
+                System.out.println(existingSub.get().getId());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
