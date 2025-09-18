@@ -126,15 +126,32 @@ public class Database {
         }
 
         public static void insertRow(long instance_id) throws DatabaseException {
-            final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.INSTANCE_ID+") VALUES(?)";
+            final String sql = "INSERT OR IGNORE INTO " + GlobalTable.tableName+"("+Columns.INSTANCE_ID+") VALUES(?)";
             Logger.trace("SQL: {}\n?: {}", sql, instance_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, instance_id);
                 statement.executeUpdate();
-                Logger.debug("Inserted instance id {} into {}", instance_id, tableName);
+                Logger.debug("Inserted instance id {} into {}", instance_id, GlobalTable.tableName);
             } catch (SQLException e) {
-                Logger.error(e, "Failed to insert instance id {} into {}", instance_id, tableName);
+                Logger.error(e, "Failed to insert instance id {} into {}", instance_id, GlobalTable.tableName);
                 throw new DatabaseException("Failed to store instance id in database.");
+            }
+        }
+
+        public static int getNumberOfConduits() throws DatabaseException {
+            final String sql = "SELECT DISTINCT " + GlobalTable.Columns.TWITCH_CONDUIT_ID +
+                " FROM " + GlobalTable.tableName;
+            Logger.trace("SQL: {}", sql);
+            try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+                ResultSet result = statement.executeQuery();
+                int numRows = 0;
+                while (result.next()) {
+                    numRows++;
+                }
+                return numRows;
+            } catch (SQLException e) {
+                Logger.warn(e, "Failed to retrieve number of conduits in database.");
+                throw new DatabaseException("Failed to retrieve number of conduits in database.");
             }
         }
 
@@ -144,7 +161,7 @@ public class Database {
          * @throws DatabaseException if fails to connect to database or set conduit
          */
         public static void setConduitId(long instance_id, String conduit_id) throws DatabaseException {
-            final String sql = "UPDATE " + tableName +
+            final String sql = "UPDATE " + GlobalTable.tableName +
                 " SET " + Columns.TWITCH_CONDUIT_ID + " = ?" + 
                 " WHERE " + Columns.INSTANCE_ID + " = ?";
             Logger.trace("SQL: {}\n?: {}, {}", sql, conduit_id, instance_id);
@@ -175,7 +192,7 @@ public class Database {
          */
         public static @Nullable String getConduitId(long instance_id) throws DatabaseException {
             final String sql = "SELECT " + Columns.TWITCH_CONDUIT_ID + 
-                " FROM " + tableName + 
+                " FROM " + GlobalTable.tableName + 
                 " WHERE " + Columns.INSTANCE_ID + " = ? " +
                 " LIMIT 1";
             Logger.trace("SQL: {}\n?: {}", sql, instance_id);
@@ -216,13 +233,13 @@ public class Database {
          * @throws DatabaseException 
          */
         public static void insertEntry(long server_id) throws DatabaseException {
-            final String sql = "INSERT OR IGNORE INTO " + tableName+"("+Columns.SERVER_ID+") VALUES(?)";
+            final String sql = "INSERT OR IGNORE INTO " + ServerTable.tableName+"("+Columns.SERVER_ID+") VALUES(?)";
             Logger.trace("SQL: {}\n?: {}", sql, server_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                Logger.error(e, "Failed to insert server id {} into {} table.", server_id, tableName);
+                Logger.error(e, "Failed to insert server id {} into {} table.", server_id, ServerTable.tableName);
                 throw new DatabaseException("Failed to store server id in database.");
             }
         }
@@ -234,7 +251,7 @@ public class Database {
                 statement.setLong(1, server_id);
                 statement.executeUpdate();
             } catch (SQLException e) {
-                Logger.error(e, "Failed to remove server id {} from {} table.", server_id, tableName);
+                Logger.error(e, "Failed to remove server id {} from {} table.", server_id, ServerTable.tableName);
                 throw new DatabaseException("Failed to remove server id from database.");
             }
         }
@@ -250,7 +267,7 @@ public class Database {
 
         public static void insertSubscription(long server_id, long broadcaster_id, String eventsub_id, long pingrole_id, long pingchannel_id) throws DatabaseException {
             final String sql = "INSERT OR IGNORE INTO " +
-                tableName+"("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID+")" + 
+                TwitchSubsTable.tableName+"("+TwitchSub.Columns.SERVER_ID+","+TwitchSub.Columns.BROADCASTER_ID+","+TwitchSub.Columns.EVENTSUB_ID+","+TwitchSub.Columns.PINGROLE_ID+","+TwitchSub.Columns.PINGCHANNEL_ID+")" + 
                 " VALUES(?,?,?,?,?)";
             Logger.trace("SQL: {}\n?: {}, {}, {}, {}, {}", sql, server_id, broadcaster_id, eventsub_id, pingrole_id, pingchannel_id);
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -402,7 +419,7 @@ public class Database {
         }
 
         public static void removeSubscription(long server_id, long broadcaster_id) throws DatabaseException {
-            final String sql = "DELETE FROM " + tableName + 
+            final String sql = "DELETE FROM " + TwitchSubsTable.tableName + 
                 " WHERE " + TwitchSub.Columns.SERVER_ID + " = ?" +
                     " AND " + TwitchSub.Columns.BROADCASTER_ID + " = ?";
             Logger.trace("SQL: {}\n?: {}", server_id, broadcaster_id);
@@ -419,7 +436,7 @@ public class Database {
         }
 
         public static void updateSubscription(long server_id, long broadcaster_id, String updated_eventsub_id, long updated_pingrole_id, long updated_pingchannel_id) throws DatabaseException {
-            final String sql = "UPDATE " + tableName + 
+            final String sql = "UPDATE " + TwitchSubsTable.tableName + 
                 " SET " + TwitchSub.Columns.EVENTSUB_ID + " = ? ," + 
                     TwitchSub.Columns.PINGROLE_ID + " = ? ," +
                     TwitchSub.Columns.PINGCHANNEL_ID + " = ?" +
