@@ -1,3 +1,0 @@
-make database check if there are already 5 conduits (the max) and if so terminate the program
-add listener for server leave event and remove from database when it is triggered
-add methods to TwitchAPI to get stuff like the twitch link and profile picture link; create embed for stream online notification

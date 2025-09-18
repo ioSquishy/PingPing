@@ -41,6 +41,7 @@ public class TwitchConduit {
         String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
         if (potentialConduitId == null) {
             Logger.warn("No existing conduit id in database found for bot id {}", bot_id);
+            // TODO check if there are already 5 existing conduits, throw exception if there is
         } else {
             Logger.debug("Potential conduit id for bot id {}: {}", bot_id, potentialConduitId);
         }
