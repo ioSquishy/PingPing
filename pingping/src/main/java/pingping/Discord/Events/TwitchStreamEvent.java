@@ -10,8 +10,30 @@ import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Discord.Helpers.PushStreamNotification;
 import pingping.Exceptions.DatabaseException;
+import pingping.Exceptions.TwitchApiException;
+import pingping.Twitch.TwitchConduit;
 
-public class TwitchStreamEvent {
+public class TwitchStreamEvent extends DiscordEvent {
+    public static final String event_name = "TwitchStreamEvent";
+    static {
+        DiscordEventRegistrar.registerEvent(event_name, TwitchStreamEvent::new);
+    }
+    public TwitchStreamEvent() {
+        super(event_name);
+    }
+    @Override
+    public void registerEventListener() {
+        subscribeToTwitchStreamOnlineEvents();
+    }
+    
+    public static void subscribeToTwitchStreamOnlineEvents() {
+        try {
+            TwitchConduit.getConduit().subscribeToStreamOnlineEvents(TwitchStreamEvent::handleStreamOnlineEvent);
+        } catch (TwitchApiException | DatabaseException e) {
+            Logger.error(e, "Failed to subscribe to twitch stream online events.");
+        }
+    }
+
     public static void handleStreamOnlineEvent(StreamOnlineEvent event) {
         long broadcasterId = Long.parseLong(event.getBroadcasterUserId());
         try {

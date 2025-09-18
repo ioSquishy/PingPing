@@ -30,9 +30,11 @@ public class Test {
         }
 
         try {
-            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("82350088").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
+            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("8235008").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
             if (existingSub.isPresent()) {
                 System.out.println(existingSub.get().getId());
+            } else {
+                System.out.println("sub not found");
             }
         } catch (Exception e) {
             e.printStackTrace();

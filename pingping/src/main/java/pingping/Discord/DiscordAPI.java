@@ -6,7 +6,7 @@ import org.tinylog.Logger;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import pingping.Discord.Commands.DiscordCommandFactory;
-import pingping.Discord.Events.SlashCommandEvent;
+import pingping.Discord.Events.DiscordEventRegistrar;
 
 public class DiscordAPI {
     private static DiscordApi api = null;
@@ -25,12 +25,13 @@ public class DiscordAPI {
 
         DiscordCommandFactory.forceLoadCommandClasses();
         Logger.debug("Discord API command classes loaded.");
-
         DiscordCommandFactory.registerGlobalCommandsInApi();
         Logger.debug("Registered discord commands in API");
 
-        SlashCommandEvent.registerSlashCommandCreateListener();
-        Logger.debug("Registered Discord event listeners.");
+        DiscordEventRegistrar.forceLoadEventClasses();
+        Logger.debug("Discord API event classes loaded.");
+        DiscordEventRegistrar.registerEvents();
+        Logger.debug("Registered discord event listeners in API");
 
         Logger.info("Discord API Connected");
     }

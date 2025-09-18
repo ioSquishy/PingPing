@@ -51,7 +51,7 @@ public class DiscordCommandFactory {
 
     /**
      * Forces subclasses of DiscordCommand to register themselves with this factory.
-     * Needs to be ran before running subclass commands.
+     * Needs to be ran before running subclass commands from Discord.
      */
     public static void forceLoadCommandClasses() {
         Logger.trace("Force loading Discord command classes...");

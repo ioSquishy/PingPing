@@ -3,11 +3,11 @@ package pingping.Twitch;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
-import com.github.philippheuer.events4j.api.IEventManager;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
 import com.github.twitch4j.eventsub.socket.IEventSubConduit;
@@ -112,11 +112,15 @@ public class TwitchConduit {
     }
 
     private void registerEventListeners() {
-        IEventManager eventManager = conduit.getEventManager();
-        eventManager.onEvent(StreamOnlineEvent.class, TwitchStreamEvent::handleStreamOnlineEvent);
+        subscribeToStreamOnlineEvents(TwitchStreamEvent::handleStreamOnlineEvent);
         Logger.trace("Registered StreamOnlineEvent listener for conduit {}", conduit.getConduitId());
 
         Logger.info("Registered event listeners for conduit {}", conduit.getConduitId());
+    }
+
+    public void subscribeToStreamOnlineEvents(Consumer<StreamOnlineEvent> consumer) {
+        conduit.getEventManager().onEvent(StreamOnlineEvent.class, consumer);
+        Logger.trace("Registered StreamOnlineEvent listener for conduit {}", conduit.getConduitId());
     }
 
 
@@ -156,8 +160,9 @@ public class TwitchConduit {
      * @throws TwitchApiException if registration failed
      */
     public String registerSubscription(long broadcaster_id) throws TwitchApiException {
+        // TODO if existing sub is still "enabled" even after conduit goes stale/is lost, make a method called forceRegisterSubscription
         try {
-            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("82350088").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
+            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions(Long.toString(broadcaster_id)).stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
             if (existingSub.isPresent()) {
                 return existingSub.get().getId();
             } else {
