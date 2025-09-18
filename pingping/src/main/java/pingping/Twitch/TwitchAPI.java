@@ -45,15 +45,35 @@ public class TwitchAPI {
         }
     }
 
+    public static User getUserById(long user_id) throws TwitchApiException, InvalidArgumentException {
+        List<User> users = getUsers(List.of(Long.toString(user_id)), null);
+        if (!users.isEmpty()) {
+            return users.get(0);
+        } else {
+            Logger.debug("Could not retrieve User of streamer with id: {}", user_id);
+            throw new InvalidArgumentException("Could not find streamer with id: " + user_id);
+        }
+    }
+
+    public static User getUserByName(@NotNull String userName) throws InvalidArgumentException, TwitchApiException {
+        List<User> users = getUsers(null, List.of(userName));
+        if (!users.isEmpty()) {
+            return users.get(0);
+        } else {
+            Logger.debug("Could not retrieve User of streamer with name: {}", userName);
+            throw new InvalidArgumentException("Could not find streamer with name: " + userName);
+        }
+    }
+
     /**
      * @throws TwitchApiException if api request fails
      */
-    private static List<Stream> getStreams(@Nullable List<String> userIds, @Nullable List<String> userNames) throws TwitchApiException {
-        if (userIds == null && userNames == null) {
-            Logger.warn("getStreams called with both userIds and userNames set to null");
+    private static List<Stream> getStreams(@Nullable List<String> user_ids, @Nullable List<String> user_names, @Nullable Integer query_limit) throws TwitchApiException {
+        if (user_ids == null && user_names == null) {
+            Logger.warn("getStreams called with both user_ids and user_names set to null");
         }
         try {
-            StreamList queryResult = twitchClient.getHelix().getStreams(null, null, null, null, null, null, userIds, userNames).execute();
+            StreamList queryResult = twitchClient.getHelix().getStreams(null, null, null, query_limit, null, null, user_ids, user_names).execute();
             return queryResult.getStreams();
         } catch (Exception e) {
             Logger.error(e);
@@ -61,19 +81,21 @@ public class TwitchAPI {
         }
     }
 
-    // public static Stream getStream(long broadcaster_id) {
-
-    // }
+    public static Stream getStream(long user_id) throws TwitchApiException, InvalidArgumentException {
+        List<Stream> stream = getStreams(List.of(Long.toString(user_id)), null, 1);
+        if (!stream.isEmpty()) {
+            return stream.get(0);
+        } else {
+            Logger.debug("Could not retrieve Stream of streamer with broadcaster id: {}", user_id);
+            throw new InvalidArgumentException("Could not find streamer with id: " + user_id);
+        }
+    }
 
     public static long getChannelId(@NotNull String channelName) throws TwitchApiException, InvalidArgumentException {
-        List<User> users = getUsers(null, List.of(channelName));
-        if (!users.isEmpty()) {
-            long channelId = Long.parseLong(users.get(0).getId());
-            Logger.trace("getChannelId({}) -> {}", channelName, channelId);
-            return channelId;
-        }
-        Logger.debug("Could not retrieve channel id of channel: {}", channelName);
-        throw new InvalidArgumentException("Could not find streamer with name: " + channelName);
+        User user = getUserByName(channelName);
+        long channelId = Long.parseLong(user.getId());
+        Logger.trace("getChannelId({}) -> {}", channelName, channelId);
+        return channelId;
     }
 
     public static void deleteAllExistingConduits() {
