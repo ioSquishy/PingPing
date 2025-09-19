@@ -29,10 +29,6 @@ public class DiscordAPI {
         DiscordEventRegistrar.forceLoadEventClasses();
         DiscordEventRegistrar.registerEvents();
 
-        
-
-        // TODO see if there's a way i can push error level logs to my dms
-
         Logger.info("Discord API Connected");
     }
 
