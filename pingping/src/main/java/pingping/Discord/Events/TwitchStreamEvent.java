@@ -18,17 +18,18 @@ public class TwitchStreamEvent extends DiscordEvent {
     static {
         DiscordEventRegistrar.registerEvent(event_name, TwitchStreamEvent::new);
     }
-    public TwitchStreamEvent() {
+    protected TwitchStreamEvent() {
         super(event_name);
     }
     @Override
-    public void registerEventListener() {
+    protected void registerEventListener() {
         subscribeToTwitchStreamOnlineEvents();
     }
     
     public static void subscribeToTwitchStreamOnlineEvents() {
         try {
             TwitchConduit.getConduit().subscribeToStreamOnlineEvents(TwitchStreamEvent::handleStreamOnlineEvent);
+            Logger.trace("Registered TwitchStreamOnlineEvent Listener");
         } catch (TwitchApiException | DatabaseException e) {
             Logger.error(e, "Failed to subscribe to twitch stream online events.");
         }

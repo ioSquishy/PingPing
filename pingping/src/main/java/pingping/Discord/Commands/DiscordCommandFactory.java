@@ -73,7 +73,7 @@ public class DiscordCommandFactory {
             }
         });
 
-        Logger.info("Discord Commands registered.");
+        Logger.debug("Discord API command classes loaded.");
     }
 
     public static void registerGlobalCommandsInApi() {
@@ -89,5 +89,6 @@ public class DiscordCommandFactory {
         }
         
         DiscordAPI.getAPI().bulkOverwriteGlobalApplicationCommands(commandBuilders).join();
+        Logger.debug("Registered discord commands in API");
     }
 }

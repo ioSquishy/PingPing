@@ -24,14 +24,10 @@ public class DiscordAPI {
         connectOnlyApi();
 
         DiscordCommandFactory.forceLoadCommandClasses();
-        Logger.debug("Discord API command classes loaded.");
         DiscordCommandFactory.registerGlobalCommandsInApi();
-        Logger.debug("Registered discord commands in API");
 
         DiscordEventRegistrar.forceLoadEventClasses();
-        Logger.debug("Discord API event classes loaded.");
         DiscordEventRegistrar.registerEvents();
-        Logger.debug("Registered discord event listeners in API");
 
         Logger.info("Discord API Connected");
     }

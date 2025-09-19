@@ -22,7 +22,6 @@ import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import io.github.cdimascio.dotenv.Dotenv;
 import pingping.Main;
 import pingping.Database.Database;
-import pingping.Discord.Events.TwitchStreamEvent;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
@@ -52,9 +51,8 @@ public class TwitchConduit {
             String actualConduitId = conduit.getConduitId();
             Logger.debug("Setting conduit id for bot id {} to {}", bot_id, actualConduitId);
             Database.GlobalTable.putConduitId(bot_id, actualConduitId);
-            Logger.info("Set conduit id for bot id {} to {}", bot_id, actualConduitId);
+            Logger.debug("Set conduit id for bot id {} to {}", bot_id, actualConduitId);
             self = this;
-            registerEventListeners();
             Logger.info("Twitch conduit connected.");
         } else {
             throw new TwitchApiException("Conduit registration unsuccessful.");
@@ -109,13 +107,6 @@ public class TwitchConduit {
             Logger.error(e);
         }
         return false;
-    }
-
-    private void registerEventListeners() {
-        subscribeToStreamOnlineEvents(TwitchStreamEvent::handleStreamOnlineEvent);
-        Logger.trace("Registered StreamOnlineEvent listener for conduit {}", conduit.getConduitId());
-
-        Logger.info("Registered event listeners for conduit {}", conduit.getConduitId());
     }
 
     public void subscribeToStreamOnlineEvents(Consumer<StreamOnlineEvent> consumer) {

@@ -48,12 +48,17 @@ public class DiscordEventRegistrar {
             }
         });
 
-        Logger.info("Discord Events registered.");
+        Logger.debug("Discord Events registered.");
     }
 
     public static void registerEvents() {
-        for (Supplier<DiscordEvent> eventClass : registeredEvents.values()) {
+        Logger.trace("Registering listeners of loaded event classes...");
+        registeredEvents.values().forEach(eventClass -> {
             eventClass.get().registerEventListener();
-        }
+        });
+        // for (Supplier<DiscordEvent> eventClass : registeredEvents.values()) {
+        //     eventClass.get().registerEventListener();
+        // }
+        Logger.debug("Registered discord event listeners in API");
     }
 }

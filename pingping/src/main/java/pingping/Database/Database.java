@@ -54,7 +54,7 @@ public class Database {
             Logger.trace("Created serverTable");
             Database.singleton.connection.createStatement().execute(twitchTable);
             Logger.trace("Created twitchTable");
-            Logger.info("Database base tables instantiated.");
+            Logger.debug("Database base tables instantiated.");
         } catch (SQLException e) {
             Logger.error(e, "Failed to instantiate base tables.");
         }
@@ -63,8 +63,8 @@ public class Database {
     public void connect() throws SQLException {
         connection = DriverManager.getConnection(connectionUrl);
         connection.createStatement().execute("PRAGMA foreign_keys = ON;");
-        Logger.info("Database connection successful.");
         Database.createBaseTables();
+        Logger.info("Database connection successful.");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (connection != null) {

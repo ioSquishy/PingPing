@@ -13,11 +13,11 @@ public class ServerLeaveEvent extends DiscordEvent {
     static {
         DiscordEventRegistrar.registerEvent(event_name, ServerLeaveEvent::new);
     }
-    public ServerLeaveEvent() {
+    protected ServerLeaveEvent() {
         super(event_name);
     }
     @Override
-    public void registerEventListener() {
+    protected void registerEventListener() {
         registerServerLeaveListener();
     }
     
@@ -31,6 +31,7 @@ public class ServerLeaveEvent extends DiscordEvent {
                     Logger.error(e, "Failed to remove server from database with id {}", event.getServer().getId());
                 }
             });
+            Logger.trace("Registered ServerLeaveListener");
         }
         return listener;
     }

@@ -13,17 +13,17 @@ public class SlashCommandEvent extends DiscordEvent {
     static {
         DiscordEventRegistrar.registerEvent(event_name, SlashCommandEvent::new);
     }
-    public SlashCommandEvent() {
+    protected SlashCommandEvent() {
         super(event_name);
     }
     @Override
-    public void registerEventListener() {
+    protected void registerEventListener() {
         registerSlashCommandCreateListener();
     }
 
     private static ListenerManager<SlashCommandCreateListener> listener = null;
     public static ListenerManager<SlashCommandCreateListener> registerSlashCommandCreateListener() {
-        if (listener != null) {
+        if (listener == null) {
             listener = DiscordAPI.getAPI().addSlashCommandCreateListener(event -> {
                 SlashCommandInteraction interaction = event.getSlashCommandInteraction();
                 try {

@@ -11,8 +11,8 @@ public class Main {
     public static void main(String[] args) {
         try {
             Database.getConnection();
-            DiscordAPI.connect();
             TwitchConduit.getConduit();
+            DiscordAPI.connect();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             return;
