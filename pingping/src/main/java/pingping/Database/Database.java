@@ -245,6 +245,9 @@ public class Database {
             }
         }
 
+        /**
+         * WARNING: all entries in TwitchSubTable with this server_id will be deleted (eventsub_id's may be lost but still registered in Twitch API)
+         */
         public static void removeEntry(long server_id) throws DatabaseException {
             final String sql = "DELETE FROM " + ServerTable.tableName + " WHERE " + Columns.SERVER_ID + " = ?";
             Logger.trace("SQL: {}\n?: {}", sql, server_id);

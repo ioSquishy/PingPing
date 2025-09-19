@@ -12,10 +12,8 @@ import java.awt.Color;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 
-import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Discord.DiscordAPI;
-import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
 import pingping.Twitch.TwitchAPI;
@@ -30,11 +28,7 @@ public class PushStreamNotification {
         if (optionalServer.isEmpty()) {
             // remove server from database. assumes that bot was removed from server while offline
             Logger.warn("TwitchSub's server with id {} was not found. Removing from database.");
-            try {
-                Database.ServerTable.removeEntry(twitchSub.server_id);
-            } catch (DatabaseException e) {
-                Logger.error(e, "Failed to remove server with id {} from database.", twitchSub.server_id);
-            }
+            RemoveServer.removeServer(twitchSub.server_id);
             return;
         }
 
