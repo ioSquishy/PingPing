@@ -22,9 +22,6 @@ public class DiscordCommandFactory {
     private static final Map<String, Function<SlashCommandInteraction, DiscordCommand>> registeredCommands = new HashMap<String, Function<SlashCommandInteraction, DiscordCommand>>();
 
     /**
-     * 
-     * @param commandName
-     * @param command
      * @throws IllegalArgumentException if commandName is not all lowercase
      */
     protected static void registerCommand(String commandName, Function<SlashCommandInteraction, DiscordCommand> command) throws IllegalArgumentException {

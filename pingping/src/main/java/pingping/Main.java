@@ -15,7 +15,7 @@ public class Main {
             DiscordAPI.connect();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
-            return;
+            System.exit(-1);
         }
     }
 }

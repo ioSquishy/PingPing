@@ -70,9 +70,10 @@ public class Database {
             if (connection != null) {
                 try {
                     connection.close();
-                    Logger.info("SQLite connection closed by shutdown hook.");
+                    System.out.println("SQLite connection closed by shutdown hook.");
                 } catch (SQLException e) {
-                    Logger.error(e, "Error closing SQLite connection in shutdown hook");
+                    System.err.println("Error closing SQLite connection in shutdown hook");
+                    e.printStackTrace();
                 }
             }
         }));
@@ -86,7 +87,6 @@ public class Database {
     public static Connection getConnection() throws DatabaseException {
         return getDatabase().connection;
     }
-
     
     private static Database getDatabase() throws DatabaseException {
         try {

@@ -28,9 +28,7 @@ public class SlashCommandEvent extends DiscordEvent {
                 SlashCommandInteraction interaction = event.getSlashCommandInteraction();
                 try {
                     DiscordCommandFactory.createCommand(interaction.getCommandName(), interaction).runCommand();
-                } catch (IllegalArgumentException e) {
-                    Logger.error(e);
-                } catch (UnsupportedOperationException e) {
+                } catch (IllegalArgumentException | UnsupportedOperationException e) {
                     Logger.error(e);
                 } catch (Exception e) {
                     Logger.error(e);

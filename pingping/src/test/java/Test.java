@@ -22,21 +22,29 @@ public class Test {
     public static void main(String[] args) {
         try {
             Database.getConnection();
-            TwitchConduit.getConduit();
-            // DiscordAPI.connectOnlyApi();
+            throw new Exception("test");
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
-            return;
+            System.exit(-1);
         }
 
-        // TwitchAPI.deleteAllExistingConduits();
-        TwitchAPI.getEnabledEventSubscriptions(null).forEach(sub -> {
-            System.out.println(sub.getId());
-            try {
-                TwitchConduit.getConduit().unregisterSubscription(sub.getId());
-            } catch (TwitchApiException | DatabaseException e) {
-                e.printStackTrace();
-            }
-        });
+        // try {
+        //     Database.getConnection();
+        //     TwitchConduit.getConduit();
+        //     // DiscordAPI.connectOnlyApi();
+        // } catch (Exception e) {
+        //     Logger.error(e, "Failed to start up successfully. Quitting.");
+        //     return;
+        // }
+
+        // // TwitchAPI.deleteAllExistingConduits();
+        // TwitchAPI.getEnabledEventSubscriptions(null).forEach(sub -> {
+        //     System.out.println(sub.getId());
+        //     try {
+        //         TwitchConduit.getConduit().unregisterSubscription(sub.getId());
+        //     } catch (TwitchApiException | DatabaseException e) {
+        //         e.printStackTrace();
+        //     }
+        // });
     }
 }
