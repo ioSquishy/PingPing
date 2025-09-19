@@ -380,7 +380,7 @@ public class Database {
          */
         public static List<Long> pullSubscriptionBroadcasterIds() throws DatabaseException {
             final String sql = "SELECT DISTINCT " + TwitchSub.Columns.BROADCASTER_ID +
-                "FROM " + TwitchSubsTable.tableName;
+                " FROM " + TwitchSubsTable.tableName;
             Logger.trace("SQL: {}", sql);
 
             try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -446,9 +446,9 @@ public class Database {
                 statement.setString(1, event_sub_id);
                 statement.setLong(2, broadcaster_id);
                 statement.executeUpdate();
-                Logger.debug("Updated eventSubIds in database for broadcasters with id {} to {}", event_sub_id, broadcaster_id);
+                Logger.debug("Updated eventSubIds in database for broadcasters with id {} to {}", broadcaster_id, event_sub_id);
             } catch (SQLException e) {
-                Logger.error(e, "Failed to update eventSubIds in database for broadcasters with id {} to {}", event_sub_id, broadcaster_id);
+                Logger.error(e, "Failed to update eventSubIds in database for broadcasters with id {} to {}", broadcaster_id, event_sub_id);
                 throw new DatabaseException("Failed to update eventSubIds in database.");
             }
         }

@@ -104,11 +104,8 @@ public class TwitchAPI {
 
         for (Conduit conduit : conduits) {
                 boolean success = deleteConduit(conduit.getId());
-                if (success) {
-                    Logger.debug("Deleted conduit with ID: {}", conduit.getId());
-                } else {
+                if (!success) {
                     allDeleted = false;
-                    Logger.error("Failed to delete conduit with ID: {}", conduit.getId());
                 }
         }
         
@@ -132,9 +129,10 @@ public class TwitchAPI {
         HystrixCommand<Void> command = twitchClient.getHelix().deleteConduit(null, conduit_id);
         command.execute();
         if (command.isSuccessfulExecution()) {
+            Logger.warn("Deleted conduit with ID: {}", conduit_id);
             return true;
         } else {
-            Logger.error(command.getExecutionException().getMessage());
+            Logger.error(command.getExecutionException(), "Failed to delete conduit with ID: {}", conduit_id);
             return false;
         }
     }
@@ -158,6 +156,18 @@ public class TwitchAPI {
         }
 
         return subs;
+    }
+
+    public static boolean unregisterEventSubscription(String eventsub_id) {
+        HystrixCommand<Void> command = TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(null, eventsub_id);
+        command.execute();
+        if (command.isSuccessfulExecution()) {
+            Logger.debug("Unregistered subscription for eventsub_id: {}", eventsub_id);
+            return true;
+        } else {
+            Logger.error(command.getExecutionException(), "Failed to unregister subscription for eventsub_id: {}", eventsub_id);
+            return false;
+        }
     }
 }
 

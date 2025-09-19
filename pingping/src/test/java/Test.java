@@ -22,27 +22,21 @@ public class Test {
     public static void main(String[] args) {
         try {
             Database.getConnection();
-            // DiscordAPI.connect();
             TwitchConduit.getConduit();
+            // DiscordAPI.connectOnlyApi();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             return;
         }
 
-        try {
-            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions("8235008").stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
-            if (existingSub.isPresent()) {
-                System.out.println(existingSub.get().getId());
-            } else {
-                System.out.println("sub not found");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         // TwitchAPI.deleteAllExistingConduits();
-        // TwitchAPI.getEventSubscriptions().forEach(sub -> {
-        //     System.out.println(sub.getId());
-        // });
+        TwitchAPI.getEnabledEventSubscriptions(null).forEach(sub -> {
+            System.out.println(sub.getId());
+            try {
+                TwitchConduit.getConduit().unregisterSubscription(sub.getId());
+            } catch (TwitchApiException | DatabaseException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

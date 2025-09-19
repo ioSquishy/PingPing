@@ -76,33 +76,43 @@ public class TwitchConduit {
             Logger.trace("Conduit created with id: {}", conduit.getConduitId());
             return true;
         } catch (ConduitNotFoundException e) {
-            Logger.warn(e, "Conduit with id {} not found. Creating new conduit...", potentialConduitId);
+            Logger.warn(e, "Conduit with id {} not found. Creating new conduit.", potentialConduitId);
             // create new conduit
             if (!setConduit(null)) {
                 Logger.error("Failed to create new conduit.");
                 return false;
             }
-            Logger.info("New conduit created with id {}", conduit.getConduitId());
+            Logger.debug("New conduit created with id {}", conduit.getConduitId());
             
             // pull subscriptions from database and recreate them
+            Logger.trace("Recreating subscriptions in database for new conduit...");
+            boolean subsAllRecreated = true;
             try {
                 List<Long> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
-                subBroadcasterIds.forEach(id -> {
+                for (Long id : subBroadcasterIds) {
                     try {
                         String newEventSubId = registerSubscription(id);
                         Database.TwitchSubsTable.setEventSubId(id, newEventSubId);
-                    } catch (TwitchApiException e1) {
+                        Logger.trace("Re-registered subscription for broadcaster {}", id);
+                    } catch (TwitchApiException | DatabaseException e1) {
+                        subsAllRecreated = false;
                         Logger.error(e1, "Failed to register subscription for broadcaster id {}", id);
-                    } catch (DatabaseException e1) {
-                        Logger.error("Failed to recreate subscription for broadcaster id {}", id);
+                        break;
                     }
-                });
+                }
             } catch (DatabaseException e1) {
+                subsAllRecreated = false;
                 Logger.error(e1, "Failed to create new conduit.");
+            }
+
+            if (subsAllRecreated) {
+                Logger.debug("Successfully recreated conduit and event subscriptions.");
+                return true;
+            } else {
+                Logger.error("Failed to recreate event subscriptions for conduit.");
+                TwitchAPI.deleteConduit(conduit.getConduitId());
                 return false;
             }
-            
-            return true;
         } catch (CreateConduitException | ShardTimeoutException | ConduitResizeException | ShardRegistrationException e) {
             Logger.error(e);
         }
@@ -168,25 +178,12 @@ public class TwitchConduit {
     }
 
     /**
-     * 
+     * Unregister through helix api because to register through conduit directly requires the actual EventSub object
      * @param eventsub_id
      * @return true if deregistration was successful
      */
     public boolean unregisterSubscription(String eventsub_id) {
-        String authToken = TwitchAuth.appAccessToken;
-        if (!TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, eventsub_id).isSuccessfulExecution()) {
-            TwitchAuth.refreshAppAccessToken();
-            authToken = TwitchAuth.appAccessToken;
-        } else {
-            return true;
-        }
-        try {
-            TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(authToken, eventsub_id).execute();
-            return true;
-        } catch (Exception e) {
-            Logger.error(e);
-        }
-        return false;
+        return TwitchAPI.unregisterEventSubscription(eventsub_id);
     }
 
     public String getConduitId() {
