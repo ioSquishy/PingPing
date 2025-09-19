@@ -161,7 +161,6 @@ public class TwitchConduit {
      * @throws TwitchApiException if registration failed
      */
     public String registerSubscription(long broadcaster_id) throws TwitchApiException {
-        // TODO if existing sub is still "enabled" even after conduit goes stale/is lost, make a method called forceRegisterSubscription
         try {
             Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions(Long.toString(broadcaster_id)).stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
             if (existingSub.isPresent()) {
