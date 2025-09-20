@@ -1,6 +1,7 @@
 package pingping.Discord.Helpers;
 
 import java.awt.Color;
+import java.util.concurrent.CompletionException;
 
 import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.permission.Role;
@@ -8,7 +9,7 @@ import org.javacord.api.entity.server.Server;
 
 
 public class PermissionlessRole {
-    public static Role create(Server server, String name, Color color) {
+    public static Role create(Server server, String name, Color color) throws CompletionException {
         return server.createRoleBuilder()
             .setName(name)
             .setColor(color)

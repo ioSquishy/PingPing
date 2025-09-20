@@ -11,6 +11,8 @@
         "PINGCHANNEL",
         "pingping",
         "PINGROLE",
+        "quickcreatetwitchsub",
+        "rolecolor",
         "unregistertwitchsub",
         "Unsub",
         "updatetwitchsub"
