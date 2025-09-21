@@ -23,13 +23,24 @@ public class ErrorLogEvent extends DiscordEvent {
         registerErrorLogEventListener();
     }
 
+    private static boolean dm_errors_enabled = true;
+    /**
+     * set whether log level ERROR events should be direct messaged to bot owner
+     * enabled by default
+     * @param status if true, dms will be sent
+     */
+    public static void setDmErrorsStatus(boolean status) {
+        dm_errors_enabled = status;
+    }
+
     private static ApplicationLogEventListener listener = null;
     public static ApplicationLogEventListener registerErrorLogEventListener() {
         if (listener == null) {
             ApplicationLogWriter.registerLogEventListener(event -> {
-                System.out.println(event.getRenderedEntry());
                 if (event.getLogEntry().getLevel() == Level.ERROR) {
-                    sendErrorToBotOwner(event);
+                    if (dm_errors_enabled) {
+                        sendErrorToBotOwner(event);
+                    }
                 }
             });
         }

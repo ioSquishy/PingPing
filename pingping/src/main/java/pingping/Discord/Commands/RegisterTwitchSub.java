@@ -57,7 +57,7 @@ public class RegisterTwitchSub extends DiscordCommand {
     public void runCommand() {
         InteractionImmediateResponseBuilder response = this.interaction.createImmediateResponder();
         try {
-            Logger.trace("RegisterTwitchSub discord command ran.");
+            Logger.trace("{} discord command ran.", commandName);
             long server_id = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
             long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElseThrow().getId();
@@ -80,7 +80,7 @@ public class RegisterTwitchSub extends DiscordCommand {
     }
 
     public static void registerSub(long server_id, String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
-        Logger.trace("Registering twitch sub for streamer {} in server {}", twitch_channel, server_id);
+        Logger.trace("{} command ran with arguments: server_id={}, twitch_channel={}, pingrole_id={}", commandName, server_id, twitch_channel, pingrole_id, pingchannel_id);
         long broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
         registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id);
         Logger.debug("Registered twitch sub for streamer {} in server {}", twitch_channel, server_id);

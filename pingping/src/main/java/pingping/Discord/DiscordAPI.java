@@ -33,10 +33,13 @@ public class DiscordAPI {
     }
 
     /**
-     * Will be null if not previously connected.
+     * If not previously connected, will connect Discord API and its classes/commands
      * @return Javacord API instance
      */
     public static DiscordApi getAPI() {
+        if (api == null) {
+            connect();
+        }
         return api;
     }
 

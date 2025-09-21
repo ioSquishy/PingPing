@@ -44,7 +44,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         DiscordCommandFactory.registerCommand(commandName, QuickCreateTwitchSub::new);
 
         // initialize registeredQuickCreations
-        registeredQuickCreations.put(791040843279630356L, 842061663389614220L);
+        registeredQuickCreations.put(791040843279630356L, 842061663389614220L); // Test Server, testing-area
     }
     public QuickCreateTwitchSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
@@ -73,10 +73,13 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         registeredQuickCreations.keySet().stream().forEach(server_id -> {
             try {
                 slashCommandBuilder.createForServer(DiscordAPI.getAPI().getServerById(server_id).orElseThrow());
+                Logger.trace("Registered command {} for server id {}", commandName, server_id);
             } catch (NoSuchElementException e) {
                 Logger.error(e, "Failed to register {} command in server {}", commandName, server_id);
             }
         });
+
+        Logger.trace("Registered command {} for all QuickCreate registered servers.");
 
         return Optional.empty();
     }
@@ -84,12 +87,22 @@ public class QuickCreateTwitchSub extends DiscordCommand {
     public void runCommand() {
         InteractionImmediateResponseBuilder response = interaction.createImmediateResponder();
         try {
+            Logger.trace("{} discord command ran.", commandName);
             long serverId = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).get();
             Optional<String> hexColor = this.interaction.getArgumentStringValueByName(color_option_command_name);
-            Color color = hexColor.isPresent() ? Color.decode(hexColor.get()) : null;
+
+            Color color = null;
+            if (hexColor.isPresent()) {
+                String rawHexColor = hexColor.get();
+                if (!rawHexColor.startsWith("#")) {
+                    rawHexColor = "#" + rawHexColor;
+                }
+                color = Color.decode(rawHexColor);
+            }
 
             runCommand(serverId, streamer, color);
+            response.setContent("Subscription added for: " + streamer).respond();
         } catch (NumberFormatException e) {
             Logger.debug(e, "Invalid hex color inputted.");
             response.setContent("Invalid hex color inputted.").respond();
@@ -109,6 +122,8 @@ public class QuickCreateTwitchSub extends DiscordCommand {
     }
 
     public static void runCommand(long server_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, TwitchApiException, DatabaseException, DiscordApiException {
+        Logger.trace("{} command ran with arguments: server_id={}, streamer={}, role_color={}", commandName, server_id, streamer, role_color);
+
         // retrieve pre-set pingchannel for server
         Long pingchannel_id = registeredQuickCreations.get(server_id);
         if (pingchannel_id == null) {
@@ -117,6 +132,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         }
 
         runCommand(server_id, pingchannel_id, streamer, role_color);
+        Logger.debug("Quick-created streamer subscription for streamer {} in server {}", streamer, server_id);
     }
 
     public static void runCommand(long server_id, long pingchannel_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, TwitchApiException, DatabaseException, DiscordApiException {

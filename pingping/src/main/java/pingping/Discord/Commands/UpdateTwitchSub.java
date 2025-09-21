@@ -60,7 +60,7 @@ public class UpdateTwitchSub extends DiscordCommand {
     public void runCommand() {
         InteractionImmediateResponseBuilder response = this.interaction.createImmediateResponder();
         try {
-            Logger.trace("UpdateTwitchSub discord command ran.");
+            Logger.trace("{} discord command ran.", commandName);
             long server_id = this.interaction.getServer().get().getId();
             String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
 
@@ -88,7 +88,7 @@ public class UpdateTwitchSub extends DiscordCommand {
     }
 
     public static void updateSub(long server_id, String streamer, @Nullable Long pingrole_id, @Nullable Long pingchannel_id) throws DatabaseException, InvalidArgumentException, TwitchApiException {
-        Logger.trace("Updating twitch sub for channel {} in server {}", streamer, server_id);
+        Logger.trace("{} command ran with arguments: server_id={}, streamer={}, pingrole_id={}, pingchannel_id={}", commandName, server_id, streamer, pingrole_id, pingchannel_id);
         long broadcaster_id = TwitchAPI.getChannelId(streamer);
         updateSub(server_id, broadcaster_id, Optional.ofNullable(pingrole_id), Optional.ofNullable(pingchannel_id));
         Logger.debug("Updated twitch sub for streamer {} in server {}", streamer, server_id);

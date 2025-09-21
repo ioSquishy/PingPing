@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.util.Optional;
 
 import org.tinylog.Logger;
@@ -21,17 +22,14 @@ import pingping.Twitch.TwitchConduit;
 @SuppressWarnings("unused")
 public class Test {
     public static void main(String[] args) {
-        try {
-            Database.getConnection();
-            TwitchConduit.getConduit();
-        } catch (Exception e) {
-            Logger.error(e, "Failed to start up successfully. Quitting.");
-            return;
-        }
+        // try {
+        //     Database.getConnection();
+        //     TwitchConduit.getConduit();
+        // } catch (Exception e) {
+        //     Logger.error(e, "Failed to start up successfully. Quitting.");
+        //     return;
+        // }
 
-        // TwitchAPI.deleteAllExistingConduits();
-        // TwitchAPI.getEnabledEventSubscriptions(null).forEach(sub -> {
-        //     System.out.println(sub.getId());
-        // });
+        System.out.println(Color.decode("#9d66b9").toString());
     }
 }

@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandInteraction;
+import org.tinylog.Logger;
 
 import pingping.Discord.DiscordAPI;
 
@@ -25,6 +26,7 @@ public class Ping extends DiscordCommand {
     }
     @Override
     public void runCommand() {
+        Logger.trace("{} discord command ran.", commandName);
         interaction.createImmediateResponder().setContent("Pong! `" + DiscordAPI.getAPI().getLatestGatewayLatency().toMillis() + "ms`").respond();
     }
 }
