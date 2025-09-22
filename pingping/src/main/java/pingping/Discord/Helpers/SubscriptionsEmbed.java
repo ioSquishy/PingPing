@@ -20,7 +20,7 @@ public class SubscriptionsEmbed {
      */
     public static List<EmbedBuilder> embedSubscriptions(List<? extends StreamerSubscription> subscriptions) {
         if (subscriptions.size() == 0) {
-            // TODO: return empty embed
+            return List.of(new EmbedBuilder().setTitle("No subscriptions present."));
         }
 
         final int subscriptionSize = subscriptions.size();

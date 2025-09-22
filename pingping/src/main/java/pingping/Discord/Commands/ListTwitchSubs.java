@@ -46,6 +46,9 @@ public class ListTwitchSubs extends DiscordCommand {
         } catch (DatabaseException e) {
             Logger.error(e);
             response.setContent(e.getMessage()).respond();
+        } catch (Exception e) {
+            Logger.error(e);
+            response.setContent("Something went wrong...").respond();
         }
     }
 
