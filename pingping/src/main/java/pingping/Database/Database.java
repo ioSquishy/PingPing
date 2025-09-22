@@ -87,6 +87,15 @@ public class Database {
     public static Connection getConnection() throws DatabaseException {
         return getDatabase().connection;
     }
+
+    public static boolean isConnected() {
+        try {
+            return getConnection().isValid(3);
+        } catch (SQLException | DatabaseException e) {
+            Logger.error(e);
+            return false;
+        }
+    }
     
     private static Database getDatabase() throws DatabaseException {
         try {

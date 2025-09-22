@@ -43,6 +43,15 @@ public class DiscordAPI {
         return api;
     }
 
+    /**
+     * In milliseconds.
+     * Expected latency between 30 and 300; anything over 1000 means something is wrong.
+     * @return -1 if not connected
+     */
+    public static long getDiscordGatewayLatency() {
+        return api != null ? DiscordAPI.getAPI().getLatestGatewayLatency().toMillis() : -1;
+    }
+
     public static long getBotId() {
         return api.getClientId();
     }

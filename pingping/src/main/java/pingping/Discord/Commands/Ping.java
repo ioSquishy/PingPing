@@ -27,6 +27,8 @@ public class Ping extends DiscordCommand {
     @Override
     public void runCommand() {
         Logger.trace("{} discord command ran.", commandName);
-        interaction.createImmediateResponder().setContent("Pong! `" + DiscordAPI.getAPI().getLatestGatewayLatency().toMillis() + "ms`").respond();
+        interaction.createImmediateResponder().setContent("Pong! `" + DiscordAPI.getDiscordGatewayLatency() + "ms`").respond();
     }
+
+    
 }

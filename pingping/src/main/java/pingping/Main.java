@@ -11,6 +11,7 @@ public class Main {
     public static final byte INSTANCE_ID = 0;
     public static void main(String[] args) {
         // attempt accessing all major classes to initialize them, not necessary though
+        ConsoleCommands.startListenerThread();
         try {
             Database.getConnection();
             TwitchConduit.getConduit();

@@ -119,6 +119,14 @@ public class TwitchConduit {
         return false;
     }
 
+    /**
+     * in milliseconds
+     * @return -1 if unknown or not connected
+     */
+    public static long getLatency() {
+        return self != null ? self.conduit.getLatency() : -1;
+    }
+
     public void subscribeToStreamOnlineEvents(Consumer<StreamOnlineEvent> consumer) {
         conduit.getEventManager().onEvent(StreamOnlineEvent.class, consumer);
         Logger.trace("Registered StreamOnlineEvent listener for conduit {}", conduit.getConduitId());
