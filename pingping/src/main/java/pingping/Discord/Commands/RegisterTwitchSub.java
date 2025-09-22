@@ -35,19 +35,19 @@ public class RegisterTwitchSub extends DiscordCommand {
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG)
                 .setDescription("Streamer to register notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
                 .build())
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name)
+                .setName(TwitchSub.PINGROLE_ID.DISCORD_CMD_ARG)
                 .setDescription("Role to ping when streamer goes live.")
                 .setType(SlashCommandOptionType.ROLE)
                 .setRequired(true)
                 .build())
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name)
+                .setName(TwitchSub.PINGCHANNEL_ID.DISCORD_CMD_ARG)
                 .setDescription("Discord channel to send stream notification in.")
                 .setType(SlashCommandOptionType.CHANNEL)
                 .setRequired(true)
@@ -59,9 +59,9 @@ public class RegisterTwitchSub extends DiscordCommand {
         try {
             Logger.trace("{} discord command ran.", commandName);
             long server_id = this.interaction.getServer().get().getId();
-            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
-            long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElseThrow().getId();
-            long channel_id = this.interaction.getArgumentChannelValueByName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name).orElseThrow().getId();
+            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG).orElseThrow();
+            long role_id = this.interaction.getArgumentRoleValueByName(TwitchSub.PINGROLE_ID.DISCORD_CMD_ARG).orElseThrow().getId();
+            long channel_id = this.interaction.getArgumentChannelValueByName(TwitchSub.PINGCHANNEL_ID.DISCORD_CMD_ARG).orElseThrow().getId();
             registerSub(server_id, streamer, role_id, channel_id);
             response.setContent("Subscription added for: " + streamer).respond();
         } catch (NoSuchElementException e) {
@@ -97,7 +97,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         String subId = TwitchConduit.getConduit().registerSubscription(broadcaster_id);
 
         // package sub details into a TwitchSub
-        TwitchSub sub = new TwitchSub(server_id, broadcaster_id, subId, pingrole_id, pingchannel_id);
+        TwitchSub sub = new TwitchSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, subId);
         
         // store TwitchSub in database
         try {

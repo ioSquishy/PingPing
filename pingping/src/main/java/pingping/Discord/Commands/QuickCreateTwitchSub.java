@@ -51,7 +51,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG)
                 .setDescription("Streamer to register notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
@@ -82,7 +82,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         try {
             Logger.trace("{} discord command ran.", commandName);
             long serverId = this.interaction.getServer().get().getId();
-            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).get();
+            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG).get();
             Optional<String> hexColor = this.interaction.getArgumentStringValueByName(color_option_command_name);
 
             Color color = null;

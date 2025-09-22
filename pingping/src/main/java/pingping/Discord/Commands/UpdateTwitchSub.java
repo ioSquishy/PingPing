@@ -38,19 +38,19 @@ public class UpdateTwitchSub extends DiscordCommand {
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG)
                 .setDescription("Streamer to update notification settings for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
                 .build())
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name)
+                .setName(TwitchSub.PINGROLE_ID.DISCORD_CMD_ARG)
                 .setDescription("Role to ping when streamer goes live.")
                 .setType(SlashCommandOptionType.ROLE)
                 .setRequired(false)
                 .build())
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name)
+                .setName(TwitchSub.PINGCHANNEL_ID.DISCORD_CMD_ARG)
                 .setDescription("Discord channel to send stream notification in.")
                 .setType(SlashCommandOptionType.CHANNEL)
                 .setRequired(false)
@@ -62,12 +62,12 @@ public class UpdateTwitchSub extends DiscordCommand {
         try {
             Logger.trace("{} discord command ran.", commandName);
             long server_id = this.interaction.getServer().get().getId();
-            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
+            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG).orElseThrow();
 
-            Role role = this.interaction.getArgumentRoleValueByName(TwitchSub.Columns.PINGROLE_ID.dcmd_argument_name).orElse(null);
+            Role role = this.interaction.getArgumentRoleValueByName(TwitchSub.PINGROLE_ID.DISCORD_CMD_ARG).orElse(null);
             Long role_id = role != null ? role.getId() : null;
 
-            ServerChannel channel = this.interaction.getArgumentChannelValueByName(TwitchSub.Columns.PINGCHANNEL_ID.dcmd_argument_name).orElse(null);
+            ServerChannel channel = this.interaction.getArgumentChannelValueByName(TwitchSub.PINGCHANNEL_ID.DISCORD_CMD_ARG).orElse(null);
             Long channel_id = channel != null ? channel.getId() : null;
 
             updateSub(server_id, streamer, role_id, channel_id);
@@ -100,7 +100,7 @@ public class UpdateTwitchSub extends DiscordCommand {
         if (existingSub == null) {
             throw new IllegalArgumentException("Existing twitch sub for this streamer not found.");
         }
-        TwitchSub updatedSub = new TwitchSub(server_id, broadcaster_id, existingSub.eventsub_id, pingrole_id.orElse(existingSub.pingrole_id), pingchannel_id.orElse(existingSub.pingchannel_id));
+        TwitchSub updatedSub = new TwitchSub(server_id, broadcaster_id, pingrole_id.orElse(existingSub.pingrole_id), pingchannel_id.orElse(existingSub.pingchannel_id), existingSub.eventsub_id);
 
         // update in database
         Database.TwitchSubsTable.updateSubscription(updatedSub);

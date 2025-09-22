@@ -35,7 +35,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name)
+                .setName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG)
                 .setDescription("Streamer to unregister notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
@@ -47,7 +47,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
         try {
             Logger.trace("{} discord command ran.", commandName);
             long server_id = this.interaction.getServer().get().getId();
-            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.Columns.BROADCASTER_ID.dcmd_argument_name).orElseThrow();
+            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG).orElseThrow();
             unregisterSub(server_id, streamer);
             response.setContent("Subscription removed for: " + streamer).respond();
         } catch (NoSuchElementException e) {

@@ -51,7 +51,7 @@ public class ListTwitchSubs extends DiscordCommand {
 
     public static List<EmbedBuilder> embedTwitchSubs(long server_id) throws DatabaseException {
         List<TwitchSub> subs = getTwitchSubs(server_id);
-        return SubscriptionsEmbed.embedTwitchSubs(subs);
+        return SubscriptionsEmbed.embedSubscriptions(subs);
     }
 
     public static List<TwitchSub> getTwitchSubs(long server_id) throws DatabaseException {

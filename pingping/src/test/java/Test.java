@@ -30,6 +30,6 @@ public class Test {
         //     return;
         // }
 
-        System.out.println(Color.decode("#9d66b9").toString());
+        System.out.println(TwitchSub.class.getSimpleName());
     }
 }
