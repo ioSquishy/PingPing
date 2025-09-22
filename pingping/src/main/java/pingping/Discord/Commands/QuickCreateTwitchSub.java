@@ -31,13 +31,6 @@ import pingping.Exceptions.TwitchApiException;
  * Server specific Discord command for Indie VTuber Fan Server
  */
 public class QuickCreateTwitchSub extends DiscordCommand {
-    /**
-     * //TODO
-     * arguments: streamer name, color hex code
-     * create two roles, one for color and one for ping; the role names will be (streamer_name) and (streamer_name + " Ping")
-     * run RegisterTwitchSub
-     * create for specific servers only
-     */
     public static final String commandName = "quickcreatetwitchsub";
     private final static Map<Long, Long> registeredQuickCreations = new HashMap<Long, Long>(); // <server_id, pingchannel_id>
     static {

@@ -11,6 +11,7 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 
 import pingping.Database.OrmObjects.TwitchSub;
+import pingping.Discord.Constants;
 import pingping.Discord.DiscordAPI;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
@@ -50,7 +51,6 @@ public class PushStreamNotification {
     }
 
     public static EmbedBuilder createTwitchStreamOnlineEmbed(long broadcaster_id, Optional<Color> color) throws TwitchApiException, InvalidArgumentException {
-        final Color twitchPurple = new Color(100, 65, 165);
         Stream twitchStream = TwitchAPI.getStream(broadcaster_id);
         User twitchStreamer = TwitchAPI.getUserById(broadcaster_id);
         String streamLink = twitch_stream_url_prefix + twitchStreamer.getLogin();
@@ -59,7 +59,7 @@ public class PushStreamNotification {
             .setTitle(twitchStream.getTitle())
             .setUrl(streamLink)
             .addField("Game", twitchStream.getGameName())
-            .setColor(color.orElse(twitchPurple))
+            .setColor(color.orElse(Constants.twitch_purple))
             .setTimestampToNow();
     }
 }

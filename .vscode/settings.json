@@ -6,6 +6,7 @@
         "dcmd",
         "eventsub",
         "Hystrix",
+        "listtwitchsubs",
         "notpingping",
         "Permissionless",
         "PINGCHANNEL",
