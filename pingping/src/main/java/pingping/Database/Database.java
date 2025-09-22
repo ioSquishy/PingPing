@@ -72,7 +72,7 @@ public class Database {
                     connection.close();
                     System.out.println("SQLite connection closed by shutdown hook.");
                 } catch (SQLException e) {
-                    System.err.println("Error closing SQLite connection in shutdown hook");
+                    System.err.println("Error closing SQLite connection in shutdown hook.");
                     e.printStackTrace();
                 }
             }
