@@ -16,10 +16,20 @@ public class Main {
             Database.getConnection();
             TwitchConduit.getConduit();
             DiscordAPI.connect();
-            ErrorLogEvent.setDmErrorsStatus(false);
+            ErrorLogEvent.setDmErrorsStatus(isRunningFromJar());
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             System.exit(-1);
         }
+    }
+
+    private static boolean isRunningFromJar() {
+        boolean state = Main.class.getProtectionDomain()
+            .getCodeSource()
+            .getLocation()
+            .getPath()
+            .endsWith(".jar");
+        Logger.info("Running from jar: {}", state);
+        return state;
     }
 }
