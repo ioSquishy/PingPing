@@ -22,14 +22,6 @@ import pingping.Twitch.TwitchConduit;
 @SuppressWarnings("unused")
 public class Test {
     public static void main(String[] args) {
-        // try {
-        //     Database.getConnection();
-        //     TwitchConduit.getConduit();
-        // } catch (Exception e) {
-        //     Logger.error(e, "Failed to start up successfully. Quitting.");
-        //     return;
-        // }
-
-        System.out.println(TwitchSub.class.getSimpleName());
+        
     }
 }
