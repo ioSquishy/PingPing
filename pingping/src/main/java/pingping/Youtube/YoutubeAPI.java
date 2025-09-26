@@ -2,6 +2,7 @@ package pingping.Youtube;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 
 import org.tinylog.Logger;
 
@@ -15,43 +16,59 @@ import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import pingping.Exceptions.YoutubeApiException;
 
 import com.google.api.client.json.gson.GsonFactory;
 
 
 public class YoutubeAPI {
-    // TODO tidy up and add error checking
+    private static YouTube youtube = null;
 
-    private static YouTube youtube = getYouTubeService();
+    private static YouTube getYouTubeService() throws GeneralSecurityException, IOException {
+        return new YouTube.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), null)
+            .setApplicationName("PingPing")
+            .build();
+    }
 
-    private static YouTube getYouTubeService() {
+    public static void connectYoutubeApi() {
         try {
-            return new YouTube.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(), null)
-                    .setApplicationName("PingPing")
-                    .build();
+            youtube = getYouTubeService();
         } catch (GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-            return null;
+            Logger.error(e, "Failed to create Youtube API instance.");
         }
     }
 
-    public static String getChannelUploadsPlaylistId(String channelUserName) throws Exception {
+    public static Optional<Video> getActiveLivestream(String channelHandle) throws YoutubeApiException {
+        try {
+            String uploadsPlaylistId = getChannelUploadsPlaylistId(channelHandle);
+            String latestUploadId = getLatestUploadVideoId(uploadsPlaylistId);
+            Video latestVideo = getVideo(latestUploadId);
+            if (isVideoLive(latestVideo)) {
+                return Optional.of(latestVideo);
+            } else {
+                return Optional.empty();
+            }
+        } catch (IOException e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get active livestream for channel with handle: " + channelHandle);
+        }
+    }
+
+    public static String getChannelUploadsPlaylistId(String channelHandle) throws IOException, YoutubeApiException {
         YouTube.Channels.List channelsList = youtube.channels().list("contentDetails");
         channelsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
-        channelsList.setForUsername(channelUserName);
+        channelsList.set("forHandle", channelHandle);
 
         ChannelListResponse response = channelsList.execute();
         Logger.debug(response.toPrettyString());
         if (response.getItems() != null && !response.getItems().isEmpty()) {
             Channel channel = response.getItems().get(0);
-            System.out.println(channel.toPrettyString());
             return channel.getContentDetails().getRelatedPlaylists().getUploads();
         }
-        return null;
+        throw new YoutubeApiException("No channel found for handle: " + channelHandle);
     }
 
-    public static String getLatestUploadVideoId(String playlistId) throws Exception {
+    public static String getLatestUploadVideoId(String playlistId) throws IOException, YoutubeApiException {
         YouTube.PlaylistItems.List playlistItemsList = youtube.playlistItems().list("contentDetails");
         playlistItemsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
         playlistItemsList.setPlaylistId(playlistId);
@@ -63,10 +80,10 @@ public class YoutubeAPI {
             PlaylistItem playlistItem = response.getItems().get(0);
             return playlistItem.getContentDetails().getVideoId();
         }
-        return null;
+        throw new YoutubeApiException("No videos found for playlist id: " + playlistId);
     }
 
-    public static boolean isVideoLive(String videoId) throws Exception {
+    public static Video getVideo(String videoId) throws IOException, YoutubeApiException {
         YouTube.Videos.List videoList = youtube.videos().list("snippet,liveStreamingDetails");
         videoList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
         videoList.setId(videoId);
@@ -75,8 +92,12 @@ public class YoutubeAPI {
         Logger.debug(response.toPrettyString());
         if (response != null && !response.getItems().isEmpty()) {
             Video video = response.getItems().get(0);
-            return video.getSnippet().getLiveBroadcastContent().equals("live");
+            return video;
         }
-        return false;
+        throw new YoutubeApiException("No videos found for videoId: " + videoId);
+    }
+
+    public static boolean isVideoLive(Video video) {
+        return video.getSnippet().getLiveBroadcastContent().equals("live");
     }
 }

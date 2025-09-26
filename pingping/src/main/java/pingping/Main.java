@@ -6,6 +6,7 @@ import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
 import pingping.Discord.Events.ErrorLogEvent;
 import pingping.Twitch.TwitchConduit;
+import pingping.Youtube.YoutubeAPI;
 
 public class Main {
     public static final byte INSTANCE_ID = 0;
@@ -15,6 +16,7 @@ public class Main {
         try {
             Database.getConnection();
             TwitchConduit.getConduit();
+            YoutubeAPI.connectYoutubeApi();
             DiscordAPI.connect();
             ErrorLogEvent.setDmErrorsStatus(isRunningFromJar());
         } catch (Exception e) {
