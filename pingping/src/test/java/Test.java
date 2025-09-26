@@ -1,27 +1,16 @@
-import java.awt.Color;
-import java.util.Optional;
+import pingping.Youtube.YoutubeAPI;
 
-import org.tinylog.Logger;
-
-import com.github.twitch4j.eventsub.EventSubSubscription;
-import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
-
-import pingping.Database.Database;
-import pingping.Database.Database.TwitchSubsTable;
-import pingping.Database.OrmObjects.TwitchSub;
-import pingping.Discord.DiscordAPI;
-import pingping.Discord.Events.ErrorLogEvent;
-import pingping.Discord.Events.TwitchStreamEvent;
-import pingping.Discord.Helpers.PushStreamNotification;
-import pingping.Exceptions.DatabaseException;
-import pingping.Exceptions.InvalidArgumentException;
-import pingping.Exceptions.TwitchApiException;
-import pingping.Twitch.TwitchAPI;
-import pingping.Twitch.TwitchConduit;
-
-@SuppressWarnings("unused")
 public class Test {
     public static void main(String[] args) {
-        
+        try {
+            String pid = YoutubeAPI.getChannelUploadsPlaylistId("Sykkuno");
+            System.out.println("pid: " + pid);
+            String vid = YoutubeAPI.getLatestUploadVideoId(pid);
+            System.out.println("vid: " + vid);
+            boolean live = YoutubeAPI.isVideoLive(vid);
+            System.out.println("live: " + live);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
