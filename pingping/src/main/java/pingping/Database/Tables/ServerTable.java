@@ -23,6 +23,12 @@ public class ServerTable {
         }
     }
 
+    public static String tableCreationSql() {
+        return "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
+            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
+            ");";
+    }
+
     /**
      * will also create a new TwitchTable table with the specified server_id
      * @param server_id

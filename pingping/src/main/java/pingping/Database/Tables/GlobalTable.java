@@ -27,6 +27,13 @@ public class GlobalTable {
         }
     }
 
+    public static String tableCreationSql() {
+        return "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
+            GlobalTable.Columns.INSTANCE_ID + " INTEGER PRIMARY KEY," +
+            GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
+            ");";
+    }
+
     public static void insertRow(long instance_id) throws DatabaseException {
         final String sql = "INSERT OR IGNORE INTO " + GlobalTable.tableName+"("+Columns.INSTANCE_ID+") VALUES(?)";
         Logger.trace("SQL: {}\n?: {}", sql, instance_id);

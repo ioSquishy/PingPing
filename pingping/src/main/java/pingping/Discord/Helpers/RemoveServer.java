@@ -17,11 +17,11 @@ public class RemoveServer {
     public static void removeServer(long server_id) {
         try {
             // unregister subscription if no other server is subscribed
-            List<Long> serverBroadcasterIdSubs = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
-            for (Long broadcasterId : serverBroadcasterIdSubs) {
-                List<TwitchSub> subsToBroadcaster = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcasterId);
-                if (subsToBroadcaster.size() == 1) { // size will be 1 if this is the only server with a subscription to the broadcaster
-                    TwitchConduit.getConduit().unregisterSubscription(subsToBroadcaster.get(0).eventsub_id);
+            List<Long> broadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
+            for (Long broadcasterId : broadcasterIds) {
+                List<TwitchSub> broadcasterSubs = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcasterId);
+                if (broadcasterSubs.size() == 1) { // size will be 1 if this is the only server with a subscription to the broadcaster
+                    TwitchConduit.getConduit().unregisterSubscription(broadcasterSubs.get(0).eventsub_id);
                 }
             }
             

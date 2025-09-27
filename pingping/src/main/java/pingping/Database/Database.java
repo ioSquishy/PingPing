@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.tinylog.Logger;
 
-import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Exceptions.DatabaseException;
 
 public class Database {
@@ -20,26 +19,13 @@ public class Database {
 
     private static void createBaseTables() throws SQLException {
         Logger.trace("Creating base tables for database.");
-        String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
-            GlobalTable.Columns.INSTANCE_ID + " INTEGER PRIMARY KEY," +
-            GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
-            ");";
+        String globalTable = GlobalTable.tableCreationSql();
         Logger.trace("Global table SQL: {}", globalTable);
 
-        String serverTable = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
-            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
-            ");";
+        String serverTable = ServerTable.tableCreationSql();
         Logger.trace("Server table SQL: {}", serverTable);
 
-        String twitchTable = "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
-            TwitchSub.SERVER_ID + " INTEGER NOT NULL," +
-            TwitchSub.BROADCASTER_ID + " INTEGER NOT NULL," +
-            TwitchSub.EVENTSUB_ID + " STRING NOT NULL," +
-            TwitchSub.PINGROLE_ID + " INTEGER NOT NULL," +
-            TwitchSub.PINGCHANNEL_ID + " INTEGER NOT NULL," +
-            "PRIMARY KEY ("+TwitchSub.SERVER_ID+","+TwitchSub.BROADCASTER_ID+")," +
-            "FOREIGN KEY ("+TwitchSub.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
-            ");";
+        String twitchTable = TwitchSubsTable.tableCreationSql();
         Logger.trace("Twitch table SQL: {}", twitchTable);
 
         try {
