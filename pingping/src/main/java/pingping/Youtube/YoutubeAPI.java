@@ -24,18 +24,18 @@ import com.google.api.client.json.gson.GsonFactory;
 public class YoutubeAPI {
     private static YouTube youtube = null;
 
-    private static YouTube getYouTubeService() throws GeneralSecurityException, IOException {
-        return new YouTube.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), null)
-            .setApplicationName("PingPing")
-            .build();
-    }
-
-    public static void connectYoutubeApi() {
-        try {
-            youtube = getYouTubeService();
-        } catch (GeneralSecurityException | IOException e) {
-            Logger.error(e, "Failed to create Youtube API instance.");
+    private static YouTube getYouTubeService() {
+        if (youtube == null) {
+            try {
+                youtube = new YouTube.Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance(), null)
+                    .setApplicationName("PingPing")
+                    .build();
+            } catch (GeneralSecurityException | IOException e) {
+                Logger.error(e, "Failed to create youtube service instance.");
+                return null;
+            }
         }
+        return youtube;
     }
 
     public static Optional<Video> getActiveLivestream(String channelHandle) throws YoutubeApiException {
@@ -55,7 +55,7 @@ public class YoutubeAPI {
     }
 
     public static String getChannelUploadsPlaylistId(String channelHandle) throws IOException, YoutubeApiException {
-        YouTube.Channels.List channelsList = youtube.channels().list("contentDetails");
+        YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails");
         channelsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
         channelsList.set("forHandle", channelHandle);
 
@@ -69,7 +69,7 @@ public class YoutubeAPI {
     }
 
     public static String getLatestUploadVideoId(String playlistId) throws IOException, YoutubeApiException {
-        YouTube.PlaylistItems.List playlistItemsList = youtube.playlistItems().list("contentDetails");
+        YouTube.PlaylistItems.List playlistItemsList = getYouTubeService().playlistItems().list("contentDetails");
         playlistItemsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
         playlistItemsList.setPlaylistId(playlistId);
         playlistItemsList.setMaxResults(1L);
@@ -84,7 +84,7 @@ public class YoutubeAPI {
     }
 
     public static Video getVideo(String videoId) throws IOException, YoutubeApiException {
-        YouTube.Videos.List videoList = youtube.videos().list("snippet,liveStreamingDetails");
+        YouTube.Videos.List videoList = getYouTubeService().videos().list("snippet,liveStreamingDetails");
         videoList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
         videoList.setId(videoId);
 

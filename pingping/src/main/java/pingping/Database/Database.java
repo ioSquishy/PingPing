@@ -16,6 +16,7 @@ import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Exceptions.DatabaseException;
 
 public class Database {
+    // TODO: split database file up
     private static final String connectionUrl = "jdbc:sqlite:notpingping.db";
     private Connection connection = null;
     private static Database singleton = null;
@@ -24,7 +25,6 @@ public class Database {
 
     private static void createBaseTables() throws SQLException {
         Logger.trace("Creating base tables for database.");
-
         String globalTable = "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
             GlobalTable.Columns.INSTANCE_ID + " INTEGER PRIMARY KEY," +
             GlobalTable.Columns.TWITCH_CONDUIT_ID + " TEXT" +
