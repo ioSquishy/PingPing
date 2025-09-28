@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
+import pingping.Twitch.TwitchAPI;
 import pingping.Twitch.TwitchConduit;
 
 public class ConsoleCommands {
@@ -13,6 +14,11 @@ public class ConsoleCommands {
             while (true) {
                 String input = scanner.nextLine();
                 switch (input.toLowerCase().strip()) {
+                    case "help":
+                        System.out.println("Available commands:");
+                        System.out.println("\"stop\" - stops application completely and cleanly");
+                        System.out.println("\"status\" - returns latency and connection statuses");
+                        System.out.println("\"delete-conduits\" - deletes all registered conduits from TwitchAPI");
                     case "stop":
                         System.out.println("-Stopping application.");
                         scanner.close();
@@ -23,7 +29,10 @@ public class ConsoleCommands {
                         System.out.println("-Twitch conduit latency: " + TwitchConduit.getLatency() + "ms");
                         System.out.println("-Discord gateway latency: " + DiscordAPI.getDiscordGatewayLatency() + "ms");
                         break;
-                    default: System.err.println("Error: Unknown command.");
+                    case "delete-conduits":
+                        TwitchAPI.deleteAllExistingConduits();
+                        break;
+                    default: System.err.println("Error: Unknown command. Run \"help\" for available commands.");
                 }
             }
         });

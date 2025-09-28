@@ -60,7 +60,7 @@ public class YoutubeAPI {
         channelsList.set("forHandle", channelHandle);
 
         ChannelListResponse response = channelsList.execute();
-        Logger.debug(response.toPrettyString());
+        Logger.trace(response.toPrettyString());
         if (response.getItems() != null && !response.getItems().isEmpty()) {
             Channel channel = response.getItems().get(0);
             return channel.getContentDetails().getRelatedPlaylists().getUploads();
@@ -75,7 +75,7 @@ public class YoutubeAPI {
         playlistItemsList.setMaxResults(1L);
 
         PlaylistItemListResponse response = playlistItemsList.execute();
-        Logger.debug(response.toPrettyString());
+        Logger.trace(response.toPrettyString());
         if (response.getItems() != null && !response.getItems().isEmpty()) {
             PlaylistItem playlistItem = response.getItems().get(0);
             return playlistItem.getContentDetails().getVideoId();
@@ -89,7 +89,7 @@ public class YoutubeAPI {
         videoList.setId(videoId);
 
         VideoListResponse response = videoList.execute();
-        Logger.debug(response.toPrettyString());
+        Logger.trace(response.toPrettyString());
         if (response != null && !response.getItems().isEmpty()) {
             Video video = response.getItems().get(0);
             return video;

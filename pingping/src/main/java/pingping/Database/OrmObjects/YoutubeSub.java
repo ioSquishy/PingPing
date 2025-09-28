@@ -5,6 +5,11 @@ public class YoutubeSub extends StreamerSubscription {
     public static final SubscriptionColumn BROADCASTER_HANDLE = new SubscriptionColumn("broadcaster_handle", null); // STRING
     public static final SubscriptionColumn LAST_STREAM_VIDEO_ID = new SubscriptionColumn("last_stream_vid_id", null); // STRING
 
+    /**
+     * YoutubeSub.SERVER_ID+","+YoutubeSub.BROADCASTER_ID+","+YoutubeSub.PINGROLE_ID+","+YoutubeSub.PINGCHANNEL_ID+","+YoutubeSub.UPLOADS_PLAYLIST_ID+","+YoutubeSub.BROADCASTER_HANDLE+","+YoutubeSub.LAST_STREAM_VIDEO_ID
+     */
+    public static final String ALL_COLUMNS = YoutubeSub.SERVER_ID+","+YoutubeSub.BROADCASTER_ID+","+YoutubeSub.PINGROLE_ID+","+YoutubeSub.PINGCHANNEL_ID+","+YoutubeSub.UPLOADS_PLAYLIST_ID+","+YoutubeSub.BROADCASTER_HANDLE+","+YoutubeSub.LAST_STREAM_VIDEO_ID;
+
     public final String uploads_playlist_id;
     public final String broadcaster_handle;
     public final String last_stream_video_id;
