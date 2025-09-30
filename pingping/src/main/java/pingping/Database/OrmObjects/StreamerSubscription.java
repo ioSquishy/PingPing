@@ -18,17 +18,17 @@ public class StreamerSubscription {
     }
 
     public static final SubscriptionColumn SERVER_ID = new SubscriptionColumn("server_id", null);  // INTEGER
-    public static final SubscriptionColumn BROADCASTER_ID = new SubscriptionColumn("broadcaster_id", "streamer");  // INTEGER
+    public static final SubscriptionColumn BROADCASTER_ID = new SubscriptionColumn("broadcaster_id", "streamer");  // STRING
     public static final SubscriptionColumn PINGROLE_ID = new SubscriptionColumn("pingrole_id", "role"); // INTEGER
     public static final SubscriptionColumn PINGCHANNEL_ID = new SubscriptionColumn("pingchannel_id", "channel"); // INTEGER
 
     // instance
     public final long server_id;
-    public final long broadcaster_id;
+    public final String broadcaster_id;
     public final long pingrole_id;
     public final long pingchannel_id;
 
-    public StreamerSubscription(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) {
+    public StreamerSubscription(long server_id, String broadcaster_id, long pingrole_id, long pingchannel_id) {
         this.server_id = server_id;
         this.broadcaster_id = broadcaster_id;
         this.pingrole_id = pingrole_id;

@@ -9,6 +9,7 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
@@ -79,14 +80,10 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
     }
 
-    public static void registerSub(long server_id, String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
+    public static void registerSub(long server_id, @NotNull String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, twitch_channel={}, pingrole_id={}", commandName, server_id, twitch_channel, pingrole_id, pingchannel_id);
-        long broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
-        registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id);
-        Logger.debug("Registered twitch sub for streamer {} in server {}", twitch_channel, server_id);
-    }
-
-    private static void registerSub(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id) throws TwitchApiException, DatabaseException, InvalidArgumentException {
+        String broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
+        
         // verify TwitchSub with id does not already exist
         TwitchSub potentialExistingSub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
         if (potentialExistingSub != null) {
@@ -94,7 +91,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         }
 
         // register sub through twitch api and get event_sub id
-        String subId = TwitchConduit.getConduit().registerSubscription(broadcaster_id);
+        String subId = TwitchConduit.getConduit().registerSubscriptionById(broadcaster_id);
 
         // package sub details into a TwitchSub
         TwitchSub sub = new TwitchSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, subId);
@@ -112,5 +109,7 @@ public class RegisterTwitchSub extends DiscordCommand {
                 Logger.error(e2, "Failed to revert changes.");
             }
         }
+
+        Logger.debug("Registered twitch sub for streamer {} in server {}", twitch_channel, server_id);
     }
 }

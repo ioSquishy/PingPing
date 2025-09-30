@@ -21,7 +21,7 @@ public class YoutubeSubsTable {
     public static String tableCreationSql() {
         return "CREATE TABLE IF NOT EXISTS " + YoutubeSubsTable.tableName + " (" +
             StreamerSubscription.SERVER_ID + " INTEGER NOT NULL," +
-            StreamerSubscription.BROADCASTER_ID + " INTEGER NOT NULL," +
+            StreamerSubscription.BROADCASTER_ID + " STRING NOT NULL," +
             StreamerSubscription.PINGROLE_ID + " INTEGER NOT NULL," +
             StreamerSubscription.PINGCHANNEL_ID + " INTEGER NOT NULL," +
             YoutubeSub.UPLOADS_PLAYLIST_ID + " STRING NOT NULL," +
@@ -36,7 +36,7 @@ public class YoutubeSubsTable {
         insertSubscription(sub.server_id, sub.broadcaster_id, sub.pingrole_id, sub.pingchannel_id, sub.uploads_playlist_id, sub.broadcaster_handle, sub.last_stream_video_id);
     }
 
-    public static void insertSubscription(long server_id, long broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String uploads_playlist_id, @NotNull String broadcaster_handle, String last_stream_video_id) throws DatabaseException {
+    public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String uploads_playlist_id, @NotNull String broadcaster_handle, String last_stream_video_id) throws DatabaseException {
         final String sql = "INSERT OR IGNORE INTO " +
             YoutubeSubsTable.tableName+"("+ YoutubeSub.ALL_COLUMNS +")" + 
             " VALUES(?,?,?,?,?,?,?)";
@@ -44,7 +44,7 @@ public class YoutubeSubsTable {
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             Database.ServerTable.insertEntry(server_id);
             statement.setLong(1, server_id);
-            statement.setLong(2, broadcaster_id);
+            statement.setString(2, broadcaster_id);
             statement.setLong(3, pingrole_id);
             statement.setLong(4, pingchannel_id);
             statement.setString(5, uploads_playlist_id);
@@ -66,7 +66,7 @@ public class YoutubeSubsTable {
     private static YoutubeSub createSubFromResultSet(ResultSet result_set) throws SQLException {
         return new YoutubeSub(
             result_set.getLong(YoutubeSub.SERVER_ID.SQL_COLUMN), 
-            result_set.getLong(YoutubeSub.BROADCASTER_ID.SQL_COLUMN), 
+            result_set.getString(YoutubeSub.BROADCASTER_ID.SQL_COLUMN), 
             result_set.getLong(YoutubeSub.PINGROLE_ID.SQL_COLUMN), 
             result_set.getLong(YoutubeSub.PINGCHANNEL_ID.SQL_COLUMN),
             result_set.getString(YoutubeSub.UPLOADS_PLAYLIST_ID.SQL_COLUMN),
@@ -79,14 +79,14 @@ public class YoutubeSubsTable {
      * @return all YoutubeSub entries with specified broadcaster_id
      * @throws DatabaseException if sql fails for some reason
      */
-    public static List<YoutubeSub> pullYoutubeSubsFromBroadcasterId(long broadcaster_id) throws DatabaseException {
+    public static List<YoutubeSub> pullYoutubeSubsFromBroadcasterId(@NotNull String broadcaster_id) throws DatabaseException {
         final String sql = "SELECT " + YoutubeSub.ALL_COLUMNS +
             " FROM " + YoutubeSubsTable.tableName +
             " WHERE " + YoutubeSub.BROADCASTER_ID + " = ?";
         Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-            statement.setLong(1, broadcaster_id);
+            statement.setString(1, broadcaster_id);
             ResultSet resultSet = statement.executeQuery();
 
             List<YoutubeSub> subs = new ArrayList<YoutubeSub>();
@@ -133,7 +133,7 @@ public class YoutubeSubsTable {
      * @return a YoutubeSub with matching server_id and broadcaster_id; null if not found
      * @throws DatabaseException if connection to database unsuccessful or sql exception
      */
-    public static YoutubeSub pullYoutubeSub(long server_id, long broadcaster_id) throws DatabaseException {
+    public static YoutubeSub pullYoutubeSub(long server_id, @NotNull String broadcaster_id) throws DatabaseException {
         final String sql = "SELECT " + YoutubeSub.ALL_COLUMNS +
             " FROM " + YoutubeSubsTable.tableName +
             " WHERE " + YoutubeSub.SERVER_ID + " = ?" +
@@ -143,7 +143,7 @@ public class YoutubeSubsTable {
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             statement.setLong(1, server_id);
-            statement.setLong(2, broadcaster_id);
+            statement.setString(2, broadcaster_id);
             ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
@@ -161,7 +161,7 @@ public class YoutubeSubsTable {
      * pulls all distinct broadcaster ids that have been subscribed to in the database
      * @throws DatabaseException if sql fails for some reason
      */
-    public static List<Long> pullSubscriptionBroadcasterIds() throws DatabaseException {
+    public static List<String> pullSubscriptionBroadcasterIds() throws DatabaseException {
         final String sql = "SELECT DISTINCT " + YoutubeSub.BROADCASTER_ID +
             " FROM " + YoutubeSubsTable.tableName;
         Logger.trace("SQL: {}", sql);
@@ -169,9 +169,9 @@ public class YoutubeSubsTable {
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             ResultSet resultSet = statement.executeQuery();
 
-            List<Long> subIds = new ArrayList<Long>();
+            List<String> subIds = new ArrayList<String>();
             while (resultSet.next()) {
-                subIds.add(resultSet.getLong(YoutubeSub.BROADCASTER_ID.SQL_COLUMN));
+                subIds.add(resultSet.getString(YoutubeSub.BROADCASTER_ID.SQL_COLUMN));
             }
             Logger.trace("Pulled {} distinct broadcaster ids from database. {}", subIds.size());
             return subIds;
@@ -181,7 +181,7 @@ public class YoutubeSubsTable {
         }
     }
 
-    public static void removeSubscription(long server_id, long broadcaster_id) throws DatabaseException {
+    public static void removeSubscription(long server_id, @NotNull String broadcaster_id) throws DatabaseException {
         final String sql = "DELETE FROM " + YoutubeSubsTable.tableName + 
             " WHERE " + YoutubeSub.SERVER_ID + " = ?" +
                 " AND " + YoutubeSub.BROADCASTER_ID + " = ?";
@@ -189,7 +189,7 @@ public class YoutubeSubsTable {
         
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             statement.setLong(1, server_id);
-            statement.setLong(2, broadcaster_id);
+            statement.setString(2, broadcaster_id);
             statement.executeUpdate();
             Logger.debug("Removed sub from database with server id {} and broadcaster id {}", server_id, broadcaster_id);
         } catch (SQLException e) {
@@ -198,7 +198,7 @@ public class YoutubeSubsTable {
         }
     }
 
-    public static void setLastStreamVideoId(long broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
+    public static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
         final String sql = "UPDATE " + YoutubeSubsTable.tableName +
             " SET " + YoutubeSub.LAST_STREAM_VIDEO_ID + " = ?" +
             " WHERE " + YoutubeSub.BROADCASTER_ID + " = ?";
@@ -206,7 +206,7 @@ public class YoutubeSubsTable {
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             statement.setString(1, last_stream_video_id);
-            statement.setLong(2, broadcaster_id);
+            statement.setString(2, broadcaster_id);
             statement.executeUpdate();
             Logger.debug("Updated last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
         } catch (SQLException e) {
@@ -215,7 +215,7 @@ public class YoutubeSubsTable {
         }
     }
 
-    public static void updateSubscription(long server_id, long broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id, @NotNull String updated_uploads_playlist_id, @NotNull String updated_broadcaster_handle, String updated_last_stream_video_id) throws DatabaseException {
+    public static void updateSubscription(long server_id, @NotNull String broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id, @NotNull String updated_uploads_playlist_id, @NotNull String updated_broadcaster_handle, String updated_last_stream_video_id) throws DatabaseException {
         final String sql = "UPDATE " + YoutubeSubsTable.tableName + 
             " SET " + YoutubeSub.PINGROLE_ID + " = ? ," +
                 YoutubeSub.PINGCHANNEL_ID + " = ?," +
@@ -233,7 +233,7 @@ public class YoutubeSubsTable {
             statement.setString(4, updated_broadcaster_handle);
             statement.setString(5, updated_last_stream_video_id);
             statement.setLong(6, server_id);
-            statement.setLong(7, broadcaster_id);
+            statement.setString(7, broadcaster_id);
             statement.executeUpdate();
             Logger.debug("Updated sub in database with server id {} and broadcaster id {}", server_id, broadcaster_id);
         } catch (SQLException e) {

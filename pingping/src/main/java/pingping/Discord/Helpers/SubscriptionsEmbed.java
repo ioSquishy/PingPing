@@ -78,13 +78,14 @@ public class SubscriptionsEmbed {
         try {
             switch (subType) {
                 case "TwitchSub": return TwitchAPI.getUserById(subscription.broadcaster_id).getDisplayName();
+                case "YoutubeSub": //TODO
                 default:
                     Logger.error("Received unknown StreamerSubscription type: {}", subType);
-                    return Long.toString(subscription.broadcaster_id);
+                    return subscription.broadcaster_id;
             }
         } catch (TwitchApiException | InvalidArgumentException e) {
             Logger.debug(e, "Failed to pull streamer name of broadcaster id: {}", subscription.broadcaster_id);
-            return Long.toString(subscription.broadcaster_id);
+            return subscription.broadcaster_id;
         }
     }
     private static String renderStreamerNames(List<? extends StreamerSubscription> subscriptions, String delimiter) {

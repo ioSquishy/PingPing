@@ -67,12 +67,8 @@ public class UnregisterTwitchSub extends DiscordCommand {
 
     public static void unregisterSub(long server_id, String twitch_channel) throws InvalidArgumentException, DatabaseException, TwitchApiException {
         Logger.trace("{} command ran with arguments: server_id={}, twitch_channel={}", commandName, server_id, twitch_channel);
-        long broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
-        unregisterSub(server_id, broadcaster_id);
-        Logger.debug("Unregistered twitch sub for streamer {} from server {}", twitch_channel, server_id);
-    }
+        String broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
 
-    private static void unregisterSub(long server_id, long broadcaster_id) throws DatabaseException, TwitchApiException {
         TwitchSub sub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
         if (sub == null) {
             throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
@@ -89,11 +85,12 @@ public class UnregisterTwitchSub extends DiscordCommand {
             Logger.error(e, "Successfully found and removed twitch subscription but failed to remove entry from database. Reverting changes...");
             // revert changes
             try {
-                TwitchConduit.getConduit().registerSubscription(broadcaster_id);
+                TwitchConduit.getConduit().registerSubscriptionById(broadcaster_id);
                 throw e;
             } catch (Exception e2) {
                 Logger.error(e2, "Failed to revert changes.");
             }
         }
+        Logger.debug("Unregistered twitch sub for streamer {} from server {}", twitch_channel, server_id);
     }
 }

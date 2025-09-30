@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 import java.awt.Color;
 
@@ -50,7 +51,7 @@ public class PushStreamNotification {
         Logger.debug("Pushed stream notification for broadcaster id {} in server id {}", twitchSub.broadcaster_id, twitchSub.server_id);
     }
 
-    public static EmbedBuilder createTwitchStreamOnlineEmbed(long broadcaster_id, Optional<Color> color) throws TwitchApiException, InvalidArgumentException {
+    public static EmbedBuilder createTwitchStreamOnlineEmbed(@NotNull String broadcaster_id, Optional<Color> color) throws TwitchApiException, InvalidArgumentException {
         Stream twitchStream = TwitchAPI.getStream(broadcaster_id);
         User twitchStreamer = TwitchAPI.getUserById(broadcaster_id);
         String streamLink = twitch_stream_url_prefix + twitchStreamer.getLogin();

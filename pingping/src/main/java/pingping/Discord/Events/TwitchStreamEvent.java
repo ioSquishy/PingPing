@@ -2,6 +2,7 @@ package pingping.Discord.Events;
 
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
@@ -36,7 +37,7 @@ public class TwitchStreamEvent extends DiscordEvent {
     }
 
     public static void handleStreamOnlineEvent(StreamOnlineEvent event) {
-        long broadcasterId = Long.parseLong(event.getBroadcasterUserId());
+        String broadcasterId = event.getBroadcasterUserId();
         try {
             handleStreamOnlineEvent(broadcasterId, event.getBroadcasterUserName());
         } catch (DatabaseException e) {
@@ -44,7 +45,7 @@ public class TwitchStreamEvent extends DiscordEvent {
         }
     }
 
-    public static void handleStreamOnlineEvent(long broadcaster_id, String streamer_name) throws DatabaseException {
+    public static void handleStreamOnlineEvent(@NotNull String broadcaster_id, String streamer_name) throws DatabaseException {
         List<TwitchSub> subscriptions = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcaster_id);
         subscriptions.forEach(sub -> {
             PushStreamNotification.pushTwitchStreamNotification(sub, streamer_name);

@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
@@ -88,10 +89,10 @@ public class TwitchConduit {
             Logger.trace("Recreating subscriptions in database for new conduit...");
             boolean subsAllRecreated = true;
             try {
-                List<Long> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
-                for (Long id : subBroadcasterIds) {
+                List<String> subBroadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
+                for (String id : subBroadcasterIds) {
                     try {
-                        String newEventSubId = registerSubscription(id);
+                        String newEventSubId = registerSubscriptionById(id);
                         Database.TwitchSubsTable.setEventSubId(id, newEventSubId);
                         Logger.trace("Re-registered subscription for broadcaster {}", id);
                     } catch (TwitchApiException | DatabaseException e1) {
@@ -156,9 +157,9 @@ public class TwitchConduit {
      * @throws TwitchApiException if api request fails
      * @throws InvalidArgumentException if channel id could not be found
      */
-    public String registerSubscription(String channel_name) throws TwitchApiException, InvalidArgumentException {
-        long channelId = TwitchAPI.getChannelId(channel_name);
-        return registerSubscription(channelId);            
+    public String registerSubscription(@NotNull String channel_name) throws TwitchApiException, InvalidArgumentException {
+        String channelId = TwitchAPI.getChannelId(channel_name);
+        return registerSubscriptionById(channelId);            
     }
 
     /**
@@ -168,13 +169,13 @@ public class TwitchConduit {
      * @return event sub id of new or existing subscription
      * @throws TwitchApiException if registration failed
      */
-    public String registerSubscription(long broadcaster_id) throws TwitchApiException {
+    public String registerSubscriptionById(@NotNull String broadcaster_id) throws TwitchApiException {
         try {
-            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions(Long.toString(broadcaster_id)).stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
+            Optional<EventSubSubscription> existingSub = TwitchAPI.getEnabledEventSubscriptions(broadcaster_id).stream().filter(sub -> sub.getRawType().equals(SubscriptionTypes.STREAM_ONLINE.getName())).findAny();
             if (existingSub.isPresent()) {
                 return existingSub.get().getId();
             } else {
-                EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(""+broadcaster_id).build()).orElseThrow();
+                EventSubSubscription sub = conduit.register(SubscriptionTypes.STREAM_ONLINE, condition -> condition.broadcasterUserId(broadcaster_id).build()).orElseThrow();
                 Logger.trace("Twitch subscription registered for broadcaster_id: {}", broadcaster_id);
                 return sub.getId();
             }

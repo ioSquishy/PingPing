@@ -13,6 +13,7 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
@@ -89,12 +90,12 @@ public class UpdateTwitchSub extends DiscordCommand {
 
     public static void updateSub(long server_id, String streamer, @Nullable Long pingrole_id, @Nullable Long pingchannel_id) throws DatabaseException, InvalidArgumentException, TwitchApiException {
         Logger.trace("{} command ran with arguments: server_id={}, streamer={}, pingrole_id={}, pingchannel_id={}", commandName, server_id, streamer, pingrole_id, pingchannel_id);
-        long broadcaster_id = TwitchAPI.getChannelId(streamer);
+        String broadcaster_id = TwitchAPI.getChannelId(streamer);
         updateSub(server_id, broadcaster_id, Optional.ofNullable(pingrole_id), Optional.ofNullable(pingchannel_id));
         Logger.debug("Updated twitch sub for streamer {} in server {}", streamer, server_id);
     }
 
-    private static void updateSub(long server_id, long broadcaster_id, Optional<Long> pingrole_id, Optional<Long> pingchannel_id) throws DatabaseException {
+    private static void updateSub(long server_id, @NotNull String broadcaster_id, Optional<Long> pingrole_id, Optional<Long> pingchannel_id) throws DatabaseException {
         // pull existing TwitchSub and create a new one with existing or fields or new ones
         TwitchSub existingSub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
         if (existingSub == null) {

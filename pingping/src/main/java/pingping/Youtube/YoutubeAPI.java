@@ -38,66 +38,121 @@ public class YoutubeAPI {
         return youtube;
     }
 
+    /**
+     * @param channelHandle
+     * @return the video if they are live, or else an empty optional
+     * @throws YoutubeApiException
+     */
     public static Optional<Video> getActiveLivestream(String channelHandle) throws YoutubeApiException {
+        String uploadsPlaylistId = getChannelUploadsPlaylistId(channelHandle);
+        String latestUploadId = getLatestUploadVideoId(uploadsPlaylistId);
+        Video latestVideo = getVideo(latestUploadId);
+        if (isVideoLive(latestVideo)) {
+            return Optional.of(latestVideo);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * 
+     * @param channelHandle
+     * @return
+     * @throws YoutubeApiException if channel not found or IO exception
+     */
+    public static Channel getChannel(String channelHandle) throws YoutubeApiException {
         try {
-            String uploadsPlaylistId = getChannelUploadsPlaylistId(channelHandle);
-            String latestUploadId = getLatestUploadVideoId(uploadsPlaylistId);
-            Video latestVideo = getVideo(latestUploadId);
-            if (isVideoLive(latestVideo)) {
-                return Optional.of(latestVideo);
+            YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails");
+            channelsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            channelsList.set("forHandle", channelHandle);
+
+            ChannelListResponse response = channelsList.execute();
+            Logger.trace(response.toPrettyString());
+
+            if (response.getItems() != null && !response.getItems().isEmpty()) {
+                Channel channel = response.getItems().get(0);
+                return channel;
             } else {
-                return Optional.empty();
+                throw new YoutubeApiException("Channel not found.");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Logger.error(e);
-            throw new YoutubeApiException("Failed to get active livestream for channel with handle: " + channelHandle);
+            throw new YoutubeApiException("Failed to get channel.");
         }
     }
 
-    public static String getChannelUploadsPlaylistId(String channelHandle) throws IOException, YoutubeApiException {
-        YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails");
-        channelsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
-        channelsList.set("forHandle", channelHandle);
-
-        ChannelListResponse response = channelsList.execute();
-        Logger.trace(response.toPrettyString());
-        if (response.getItems() != null && !response.getItems().isEmpty()) {
-            Channel channel = response.getItems().get(0);
+    public static String getChannelUploadsPlaylistId(Channel channel) throws YoutubeApiException {
+        try {
             return channel.getContentDetails().getRelatedPlaylists().getUploads();
+        } catch (NullPointerException e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get uploads playlist id.");
         }
-        throw new YoutubeApiException("No channel found for handle: " + channelHandle);
     }
 
-    public static String getLatestUploadVideoId(String playlistId) throws IOException, YoutubeApiException {
-        YouTube.PlaylistItems.List playlistItemsList = getYouTubeService().playlistItems().list("contentDetails");
-        playlistItemsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
-        playlistItemsList.setPlaylistId(playlistId);
-        playlistItemsList.setMaxResults(1L);
-
-        PlaylistItemListResponse response = playlistItemsList.execute();
-        Logger.trace(response.toPrettyString());
-        if (response.getItems() != null && !response.getItems().isEmpty()) {
-            PlaylistItem playlistItem = response.getItems().get(0);
-            return playlistItem.getContentDetails().getVideoId();
-        }
-        throw new YoutubeApiException("No videos found for playlist id: " + playlistId);
+    public static String getChannelUploadsPlaylistId(String channelHandle) throws YoutubeApiException {
+        Channel channel = getChannel(channelHandle);
+        return getChannelUploadsPlaylistId(channel);
     }
 
-    public static Video getVideo(String videoId) throws IOException, YoutubeApiException {
-        YouTube.Videos.List videoList = getYouTubeService().videos().list("snippet,liveStreamingDetails");
-        videoList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
-        videoList.setId(videoId);
-
-        VideoListResponse response = videoList.execute();
-        Logger.trace(response.toPrettyString());
-        if (response != null && !response.getItems().isEmpty()) {
-            Video video = response.getItems().get(0);
-            return video;
+    public static String getChannelId(Channel channel) throws YoutubeApiException {
+        try {
+            return channel.getId();
+        } catch (NullPointerException e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get channel id.");
         }
-        throw new YoutubeApiException("No videos found for videoId: " + videoId);
+    }
+
+    public static String getLatestUploadVideoId(String playlistId) throws YoutubeApiException {
+        try {
+            YouTube.PlaylistItems.List playlistItemsList = getYouTubeService().playlistItems().list("contentDetails");
+            playlistItemsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            playlistItemsList.setPlaylistId(playlistId);
+            playlistItemsList.setMaxResults(1L);
+
+            PlaylistItemListResponse response = playlistItemsList.execute();
+            Logger.trace(response.toPrettyString());
+
+            if (response.getItems() != null && !response.getItems().isEmpty()) {
+                PlaylistItem playlistItem = response.getItems().get(0);
+                return playlistItem.getContentDetails().getVideoId();
+            } else {
+                throw new YoutubeApiException("No videos found for playlist id: " + playlistId);
+            }
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get latest upload video id.");
+        }
+    }
+
+    public static Video getVideo(String videoId) throws YoutubeApiException {
+        try {
+            YouTube.Videos.List videoList = getYouTubeService().videos().list("snippet,liveStreamingDetails");
+            videoList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            videoList.setId(videoId);
+
+            VideoListResponse response = videoList.execute();
+            Logger.trace(response.toPrettyString());
+            if (response != null && !response.getItems().isEmpty()) {
+                Video video = response.getItems().get(0);
+                return video;
+            } else {
+                throw new YoutubeApiException("No videos found for videoId: " + videoId);
+            }
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get video.");
+        }
     }
 
     public static boolean isVideoLive(Video video) {
-        return video.getSnippet().getLiveBroadcastContent().equals("live");
+        try {
+            String liveBroadcastContent = video.getSnippet().getLiveBroadcastContent();
+            return liveBroadcastContent != null && liveBroadcastContent.equals("live");
+        } catch (NullPointerException e) {
+            Logger.error(e);
+            return false;
+        }
     }
 }

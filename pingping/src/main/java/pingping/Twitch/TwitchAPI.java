@@ -45,8 +45,8 @@ public class TwitchAPI {
         }
     }
 
-    public static User getUserById(long user_id) throws TwitchApiException, InvalidArgumentException {
-        List<User> users = getUsers(List.of(Long.toString(user_id)), null);
+    public static User getUserById(@NotNull String user_id) throws TwitchApiException, InvalidArgumentException {
+        List<User> users = getUsers(List.of(user_id), null);
         if (!users.isEmpty()) {
             return users.get(0);
         } else {
@@ -81,8 +81,8 @@ public class TwitchAPI {
         }
     }
 
-    public static Stream getStream(long user_id) throws TwitchApiException, InvalidArgumentException {
-        List<Stream> stream = getStreams(List.of(Long.toString(user_id)), null, 1);
+    public static Stream getStream(@NotNull String user_id) throws TwitchApiException, InvalidArgumentException {
+        List<Stream> stream = getStreams(List.of(user_id), null, 1);
         if (!stream.isEmpty()) {
             return stream.get(0);
         } else {
@@ -91,9 +91,9 @@ public class TwitchAPI {
         }
     }
 
-    public static long getChannelId(@NotNull String channelName) throws TwitchApiException, InvalidArgumentException {
+    public static String getChannelId(@NotNull String channelName) throws TwitchApiException, InvalidArgumentException {
         User user = getUserByName(channelName);
-        long channelId = Long.parseLong(user.getId());
+        String channelId = user.getId();
         Logger.trace("getChannelId({}) -> {}", channelName, channelId);
         return channelId;
     }
