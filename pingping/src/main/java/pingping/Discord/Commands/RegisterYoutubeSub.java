@@ -9,10 +9,12 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import com.google.api.services.youtube.model.Channel;
 
+import pingping.Database.Database;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
@@ -79,7 +81,8 @@ public class RegisterYoutubeSub extends DiscordCommand {
         }
     }
 
-    public static void registerSub(long server_id, String youtube_handle, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, YoutubeApiException, DatabaseException {
+    // TODO: to make more quota-efficient, check if broadcaster uploads_playlist and broacaster_id is already in the database via youtube_handle and copy from there
+    public static void registerSub(long server_id, @NotNull String youtube_handle, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, YoutubeApiException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, youtube_handle={}, pingrole_id={}", commandName, server_id, youtube_handle, pingrole_id, pingchannel_id);
         Channel youtubeChannel = YoutubeAPI.getChannel(youtube_handle);
         String broadcaster_id = YoutubeAPI.getChannelId(youtubeChannel);
@@ -88,7 +91,21 @@ public class RegisterYoutubeSub extends DiscordCommand {
         Logger.debug("Registered youtube sub for streamer {} in server {}", youtube_handle, server_id);
     }
 
-    private static void registerSub(long server_id, String broadcaster_id, long pingrole_id, long pingchannel_id, String uploads_playlist_id, String broadcaster_handle) {
-        YoutubeSub youtubeSub = new YoutubeSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, broadcaster_handle, null);
+    private static void registerSub(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String uploads_playlist_id, @NotNull String broadcaster_handle) throws DatabaseException, InvalidArgumentException {        
+        // verify YoutubeSub with id does not already exist
+        YoutubeSub potentialExistingSub = Database.YoutubeSubsTable.pullYoutubeSub(server_id, broadcaster_id);
+        if (potentialExistingSub != null) {
+            throw new InvalidArgumentException("Youtube sub for that streamer already exists. Use UpdateYoutubeSub instead.");
+        }
+
+        YoutubeSub sub = new YoutubeSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, broadcaster_handle, null);
+
+        // store YoutubeSub in database
+        try {
+            Database.YoutubeSubsTable.insertSubscription(sub);
+        } catch (DatabaseException e) {
+            Logger.error(e, "Successfully found and subscribed new Youtube sub, but failed to add entry to database.");
+            throw e;
+        }
     }
 }

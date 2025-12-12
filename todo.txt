@@ -1,0 +1,3 @@
+1. update database to have a new table "YoutubeChannels" which will have attributes: _channel_id_, uploads_playlist_id, broadcaster_handle, lastvid SERVER_ID
+2. make YoutubeSubs table reference YoutubeChannels by _channel_id_
+3. Implemented LivePoller.java to pull info from YoutubeChannels table and then pull from YoutubeSubs to notify people of livestreams

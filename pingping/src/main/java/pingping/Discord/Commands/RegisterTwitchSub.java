@@ -100,7 +100,7 @@ public class RegisterTwitchSub extends DiscordCommand {
         try {
             Database.TwitchSubsTable.insertSubscription(sub);
         } catch (DatabaseException e) {
-            Logger.error(e, "Successfully found and subscripted new twitch sub, but failed to add entry to database. Reverting changes...");
+            Logger.error(e, "Successfully found and subscribed new twitch sub, but failed to add entry to database. Reverting changes...");
             // revert changes
             try {
                 TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);

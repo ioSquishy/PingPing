@@ -2,7 +2,6 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.compile.nullAnalysis.mode": "automatic",
     "cSpell.words": [
-        "asquishy",
         "dcmd",
         "eventsub",
         "Hystrix",
@@ -13,6 +12,7 @@
         "pingping",
         "PINGROLE",
         "quickcreatetwitchsub",
+        "registeryoutubesub",
         "rolecolor",
         "unregistertwitchsub",
         "Unsub",

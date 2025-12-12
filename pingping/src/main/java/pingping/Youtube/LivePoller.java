@@ -1,16 +1,18 @@
 package pingping.Youtube;
 
+import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import pingping.Database.Database;
+
 public class LivePoller {
-    
     private static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private static Runnable pollApi() {
         return () -> {
-            // TODO create a thread that polls channels in database every minute
+            // pull playlist ids from database
         };
     }
 
