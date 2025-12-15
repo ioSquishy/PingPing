@@ -16,7 +16,9 @@ public class Database {
     public static class GlobalTable extends pingping.Database.Tables.GlobalTable {}
     public static class ServerTable extends pingping.Database.Tables.ServerTable {}
     public static class TwitchSubsTable extends pingping.Database.Tables.TwitchSubsTable {}
+    public static class TwitchChannelsTable extends pingping.Database.Tables.TwitchSubsTable {}
     public static class YoutubeSubsTable extends pingping.Database.Tables.YoutubeSubsTable {}
+    public static class YoutubeChannelsTable extends pingping.Database.Tables.YoutubeChannelsTable {}
 
     private static void createBaseTables() throws SQLException {
         Logger.trace("Creating base tables for database.");
@@ -31,6 +33,8 @@ public class Database {
 
         String youtubeTable = YoutubeSubsTable.tableCreationSql();
         Logger.trace("Youtube table SQL: {}", youtubeTable);
+
+        // todo add channels tables
 
         try {
             Database.singleton.connection.createStatement().execute(globalTable);

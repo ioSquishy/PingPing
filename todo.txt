@@ -1,3 +1,5 @@
-1. update database to have a new table "YoutubeChannels" which will have attributes: _channel_id_, uploads_playlist_id, broadcaster_handle, lastvid SERVER_ID
-2. make YoutubeSubs table reference YoutubeChannels by _channel_id_
+1. update database to have a new table "YoutubeChannels" which will have attributes: _broadcaster_id_, uploads_playlist_id, broadcaster_handle, lastvid SERVER_ID
+2. update database to have a new table "TwitchChannels"  which will have attributes: _broadcaster_id_, eventsub_id
+    this prevents a potential update anomoly where RegisterTwitchSub could return a new eventsub_id and not update existing subscriptions in other rows
+    2a. make the returned eventsub_id be set in TwitchChannels table
 3. Implemented LivePoller.java to pull info from YoutubeChannels table and then pull from YoutubeSubs to notify people of livestreams
