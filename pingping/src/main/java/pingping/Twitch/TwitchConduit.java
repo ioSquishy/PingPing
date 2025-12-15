@@ -30,6 +30,7 @@ import pingping.Exceptions.TwitchApiException;
 public class TwitchConduit {
     private static TwitchConduit self = null;
     private IEventSubConduit conduit;
+    private final String GLOBAL_TABLE_CONDUIT_KEY = "conduit_id";
 
     /**
      * Creates or retrieves a conduit
@@ -39,19 +40,16 @@ public class TwitchConduit {
      */
     private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
         Logger.warn("Existing TwitchConduit instance not found; Initializing new instance for bot id: {}", bot_id);
-        String potentialConduitId = Database.GlobalTable.getConduitId(bot_id);
+        String potentialConduitId = Database.GlobalTable.getValue(GLOBAL_TABLE_CONDUIT_KEY);
         if (potentialConduitId == null) {
             Logger.warn("No existing conduit id in database found for bot id {}", bot_id);
-            if (Database.GlobalTable.getNumberOfConduits() >= 5) {
-                throw new DatabaseException("5 conduits already exist! Cannot create more.");
-            }
         } else {
             Logger.debug("Potential conduit id for bot id {}: {}", bot_id, potentialConduitId);
         }
         if (setConduit(potentialConduitId)) {
             String actualConduitId = conduit.getConduitId();
             Logger.debug("Setting conduit id for bot id {} to {}", bot_id, actualConduitId);
-            Database.GlobalTable.putConduitId(bot_id, actualConduitId);
+            Database.GlobalTable.setValue(GLOBAL_TABLE_CONDUIT_KEY, actualConduitId);
             Logger.debug("Set conduit id for bot id {} to {}", bot_id, actualConduitId);
             self = this;
             Logger.info("Twitch conduit connected.");
