@@ -3,6 +3,7 @@ package pingping.Database.Tables;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,15 +29,21 @@ public class GlobalTable {
     }
 
     public static String tableCreationSql() {
-        return "CREATE TABLE IF NOT EXISTS " + GlobalTable.tableName + " (" +
-            GlobalTable.Columns.KEY + " TEXT PRIMARY KEY," +
-            GlobalTable.Columns.VALUE + " TEXT" +
-            ");";
+        // language=sql
+        String sql = MessageFormat.format("""
+                CREATE TABLE IF NOT EXISTS {0} (
+                    {1} TEXT UNIQUE NOT NULL,
+                    {2} TEXT
+                    PRIMARY KEY {1}
+                )
+                """, GlobalTable.tableName, GlobalTable.Columns.KEY, GlobalTable.Columns.VALUE);
+        return sql;
     }
 
     public static void insertKey(@NotNull String key) throws DatabaseException {
-        final String sql = "INSERT OR IGNORE INTO " + GlobalTable.tableName+"("+Columns.KEY+") VALUES(?)";
+        final String sql = "INSERT OR IGNORE INTO global (key) VALUES(?)";
         Logger.trace("SQL: {}\n?: {}", sql, key);
+
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             statement.setString(1, key);
             statement.executeUpdate();
@@ -48,9 +55,7 @@ public class GlobalTable {
     }
 
     public static void setValue(@NotNull String key, String value) throws DatabaseException {
-        final String sql = "UPDATE " + GlobalTable.tableName +
-            " SET " + Columns.VALUE + " = ?" + 
-            " WHERE " + Columns.KEY + " = ?;";
+        final String sql = "UPDATE global SET value = ? WHERE key = ?";
         Logger.trace("SQL: {}\n?: {}, {}", sql, value, key);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -65,9 +70,7 @@ public class GlobalTable {
     }
 
     public static @Nullable String getValue(@NotNull String key) throws DatabaseException {
-        final String sql = "SELECT " + Columns.VALUE + 
-            " FROM " + GlobalTable.tableName + 
-            " WHERE " + Columns.KEY + " = ?;";
+        final String sql = "SELECT value FROM global WHERE key = ?";
         Logger.trace("SQL: {}\n?: {}", sql, key);
         
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {

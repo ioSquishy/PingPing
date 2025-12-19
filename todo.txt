@@ -3,3 +3,4 @@
     this prevents a potential update anomoly where RegisterTwitchSub could return a new eventsub_id and not update existing subscriptions in other rows
     2a. make the returned eventsub_id be set in TwitchChannels table
 3. Implemented LivePoller.java to pull info from YoutubeChannels table and then pull from YoutubeSubs to notify people of livestreams
+4. change sql queries in table classes to use just hard coded strings, continue using columns outside of classes though
