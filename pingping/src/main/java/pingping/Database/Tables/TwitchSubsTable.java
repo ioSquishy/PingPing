@@ -3,6 +3,7 @@ package pingping.Database.Tables;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,33 +19,38 @@ public class TwitchSubsTable {
     // columns in TwitchSub.java
 
     public static String tableCreationSql() {
-        return "CREATE TABLE IF NOT EXISTS " + TwitchSubsTable.tableName + " (" +
-            TwitchSub.SERVER_ID + " INTEGER NOT NULL," +
-            TwitchSub.BROADCASTER_ID + " STRING NOT NULL," +
-            TwitchSub.PINGROLE_ID + " INTEGER NOT NULL," +
-            TwitchSub.PINGCHANNEL_ID + " INTEGER NOT NULL," +
-            TwitchSub.EVENTSUB_ID + " STRING NOT NULL," +
-            "PRIMARY KEY ("+TwitchSub.SERVER_ID+","+TwitchSub.BROADCASTER_ID+")," +
-            "FOREIGN KEY ("+TwitchSub.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
-            ");";
+        // language=sql
+        String sql = MessageFormat.format("""
+                CREATE TABLE IF NOT EXISTS {0} (
+                    {1} INTEGER UNIQUE NOT NULL, -- SERVER_ID
+                    {2} TEXT NOT NULL, -- BROADCASTER_ID
+                    {3} INTEGER NOT NULL, -- PINGROLE_ID
+                    {4} INTEGER NOT NULL, -- PINGCHANNEL_ID
+                    PRIMARY KEY ({1}, {2}),
+                    FOREIGN KEY ({1}) REFERENCES {5}({6}) ON DELETE CASCADE
+                )
+                """, TwitchSubsTable.tableName, TwitchSub.SERVER_ID, TwitchSub.BROADCASTER_ID,
+                    TwitchSub.PINGROLE_ID, TwitchSub.PINGCHANNEL_ID, ServerTable.tableName, ServerTable.Columns.SERVER_ID);
+
+        return sql;
     }
 
     public static void insertSubscription(@NotNull TwitchSub sub) throws DatabaseException {
-        insertSubscription(sub.server_id, sub.broadcaster_id, sub.pingrole_id, sub.pingchannel_id, sub.eventsub_id);
+        insertSubscription(sub.server_id, sub.broadcaster_id, sub.pingrole_id, sub.pingchannel_id);
+        // TODO add a call to TwitchChannelsTable to insert event_sub id
     }
 
-    public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String eventsub_id) throws DatabaseException {
+    public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id) throws DatabaseException {
         final String sql = "INSERT OR IGNORE INTO " +
-            TwitchSubsTable.tableName+"("+TwitchSub.SERVER_ID+","+TwitchSub.BROADCASTER_ID+","+TwitchSub.PINGROLE_ID+","+TwitchSub.PINGCHANNEL_ID+","+TwitchSub.EVENTSUB_ID+")" + 
-            " VALUES(?,?,?,?,?)";
-        Logger.trace("SQL: {}\n?: {}, {}, {}, {}, {}", sql, server_id, broadcaster_id, pingrole_id, pingchannel_id, eventsub_id);
+            TwitchSubsTable.tableName+"("+TwitchSub.SERVER_ID+","+TwitchSub.BROADCASTER_ID+","+TwitchSub.PINGROLE_ID+","+TwitchSub.PINGCHANNEL_ID+")" + 
+            " VALUES(?,?,?,?)";
+        Logger.trace("SQL: {}\n?: {}, {}, {}, {}", sql, server_id, broadcaster_id, pingrole_id, pingchannel_id);
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             Database.ServerTable.insertEntry(server_id);
             statement.setLong(1, server_id);
             statement.setString(2, broadcaster_id);
             statement.setLong(3, pingrole_id);
             statement.setLong(4, pingchannel_id);
-            statement.setString(5, eventsub_id);
             statement.executeUpdate();
         } catch (SQLException e) {
             Logger.error(e, "Failed to insert subscription with server_id {} and broadcaster_id {} into {} table.", server_id, broadcaster_id, tableName);

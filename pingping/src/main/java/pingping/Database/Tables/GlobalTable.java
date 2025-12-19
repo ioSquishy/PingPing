@@ -33,7 +33,7 @@ public class GlobalTable {
         String sql = MessageFormat.format("""
                 CREATE TABLE IF NOT EXISTS {0} (
                     {1} TEXT UNIQUE NOT NULL,
-                    {2} TEXT
+                    {2} TEXT,
                     PRIMARY KEY {1}
                 )
                 """, GlobalTable.tableName, GlobalTable.Columns.KEY, GlobalTable.Columns.VALUE);
