@@ -1,5 +1,6 @@
 package pingping.Database.Tables;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,25 +37,45 @@ public class TwitchSubsTable {
     }
 
     public static void insertSubscription(@NotNull TwitchSub sub) throws DatabaseException {
-        insertSubscription(sub.server_id, sub.broadcaster_id, sub.pingrole_id, sub.pingchannel_id);
-        // TODO add a call to TwitchChannelsTable to insert event_sub id
+        insertSubscription(sub.server_id, sub.broadcaster_id, sub.pingrole_id, sub.pingchannel_id, sub.eventsub_id);
     }
 
-    public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id) throws DatabaseException {
-        final String sql = "INSERT OR IGNORE INTO " +
-            TwitchSubsTable.tableName+"("+TwitchSub.SERVER_ID+","+TwitchSub.BROADCASTER_ID+","+TwitchSub.PINGROLE_ID+","+TwitchSub.PINGCHANNEL_ID+")" + 
-            " VALUES(?,?,?,?)";
+    public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String eventsub_id) throws DatabaseException {
+        // language=sql
+        final String sql = """
+                INSERT OR IGNORE INTO twitch_subscriptions (
+                    server_id, broadcaster_id, pingrole_id, pingchannel_id
+                ) VALUES (?, ?, ?, ?)
+                """;
         Logger.trace("SQL: {}\n?: {}, {}, {}, {}", sql, server_id, broadcaster_id, pingrole_id, pingchannel_id);
-        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+
+        Connection databaseConnection = Database.getConnection();
+        try (PreparedStatement statement = databaseConnection.prepareStatement(sql)) {
             Database.ServerTable.insertEntry(server_id);
             statement.setLong(1, server_id);
             statement.setString(2, broadcaster_id);
             statement.setLong(3, pingrole_id);
             statement.setLong(4, pingchannel_id);
+
+            databaseConnection.setAutoCommit(false); // set auto commit to false so i can rollback if first call doesnt succeed
+            TwitchChannelsTable.insertEventSubId(broadcaster_id, eventsub_id);
             statement.executeUpdate();
+            databaseConnection.commit();
         } catch (SQLException e) {
             Logger.error(e, "Failed to insert subscription with server_id {} and broadcaster_id {} into {} table.", server_id, broadcaster_id, tableName);
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                Logger.error(e1, "Failed to rollback database commit.");
+            }
             throw new DatabaseException("Failed to insert subscription into database.");
+        } finally {
+            try {
+                Database.getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to set database auto commit to true.");
+                throw new DatabaseException("Failed to set database auto commit to true.");
+            }
         }
     }
 
@@ -198,20 +219,7 @@ public class TwitchSubsTable {
     }
 
     public static void setEventSubId(@NotNull String broadcaster_id, @NotNull String event_sub_id) throws DatabaseException {
-        final String sql = "UPDATE " + TwitchSubsTable.tableName +
-            " SET " + TwitchSub.EVENTSUB_ID + " = ?" +
-            " WHERE " + TwitchSub.BROADCASTER_ID + " = ?";
-        Logger.trace("SQL: {}\n?: {}", event_sub_id, broadcaster_id);
-
-        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-            statement.setString(1, event_sub_id);
-            statement.setString(2, broadcaster_id);
-            statement.executeUpdate();
-            Logger.debug("Updated eventSubIds in database for broadcasters with id {} to {}", broadcaster_id, event_sub_id);
-        } catch (SQLException e) {
-            Logger.error(e, "Failed to update eventSubIds in database for broadcasters with id {} to {}", broadcaster_id, event_sub_id);
-            throw new DatabaseException("Failed to update eventSubIds in database.");
-        }
+        TwitchChannelsTable.setEventSubId(broadcaster_id, event_sub_id);
     }
 
     public static void updateSubscription(long server_id, @NotNull String broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id, @NotNull String updated_eventsub_id) throws DatabaseException {
