@@ -19,7 +19,7 @@ public class YoutubeSubsTable {
     // columns in YoutubeSub.java
 
     public static String tableCreationSql() {
-        return "CREATE TABLE IF NOT EXISTS " + YoutubeSubsTable.tableName + " (" +
+        String sql = "CREATE TABLE IF NOT EXISTS " + YoutubeSubsTable.tableName + " (" +
             StreamerSubscription.SERVER_ID + " INTEGER NOT NULL," +
             StreamerSubscription.BROADCASTER_ID + " STRING NOT NULL," +
             StreamerSubscription.PINGROLE_ID + " INTEGER NOT NULL," +
@@ -30,6 +30,8 @@ public class YoutubeSubsTable {
             "PRIMARY KEY ("+StreamerSubscription.SERVER_ID+","+StreamerSubscription.BROADCASTER_ID+")," +
             "FOREIGN KEY ("+StreamerSubscription.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
             ");";
+        Logger.trace("Youtube table create SQL: {}", sql);
+        return sql;
     }
 
     public static void insertSubscription(@NotNull YoutubeSub sub) throws DatabaseException {

@@ -37,6 +37,7 @@ public class GlobalTable {
                     PRIMARY KEY {1}
                 )
                 """, GlobalTable.tableName, GlobalTable.Columns.KEY, GlobalTable.Columns.VALUE);
+        Logger.trace("Global table creation SQL: {}", sql);
         return sql;
     }
 

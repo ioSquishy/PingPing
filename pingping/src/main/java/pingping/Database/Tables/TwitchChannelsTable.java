@@ -17,11 +17,13 @@ public class TwitchChannelsTable {
 
     public static String tableCreationSql() {
         // language=sql
-        return MessageFormat.format("""
+        String sql = MessageFormat.format("""
             CREATE TABLE IF NOT EXISTS {0} (
                 {1} TEXT UNIQUE NOT NULL, -- broadcaster_id
                 {2} TEXT -- eventsub_id
                 )""", TwitchChannelsTable.tableName, TwitchSub.BROADCASTER_ID, TwitchSub.EVENTSUB_ID);
+        Logger.trace("TwitchChannelsTable table craete SQL: {}", sql);
+        return sql;
     }
 
     protected static void insertEventSubId(@NotNull String broadcaster_id, @NotNull String eventsub_id) throws DatabaseException {

@@ -22,30 +22,15 @@ public class Database {
 
     private static void createBaseTables() throws SQLException {
         Logger.trace("Creating base tables for database.");
-        String globalTable = GlobalTable.tableCreationSql();
-        Logger.trace("Global table SQL: {}", globalTable);
-
-        String serverTable = ServerTable.tableCreationSql();
-        Logger.trace("Server table SQL: {}", serverTable);
-
-        String twitchTable = TwitchSubsTable.tableCreationSql();
-        Logger.trace("Twitch table SQL: {}", twitchTable);
-
-        String youtubeTable = YoutubeSubsTable.tableCreationSql();
-        Logger.trace("Youtube table SQL: {}", youtubeTable);
-
-        // todo add channels tables
-
         try {
-            Database.singleton.connection.createStatement().execute(globalTable);
-            Logger.trace("Created globalTable");
-            Database.singleton.connection.createStatement().execute(serverTable);
-            Logger.trace("Created serverTable");
-            Database.singleton.connection.createStatement().execute(twitchTable);
-            Logger.trace("Created twitchTable");
-            Database.singleton.connection.createStatement().execute(youtubeTable);
-            Logger.trace("Created youtubeTable");
+            Database.singleton.connection.createStatement().execute(GlobalTable.tableCreationSql());
+            Database.singleton.connection.createStatement().execute(ServerTable.tableCreationSql());
 
+            Database.singleton.connection.createStatement().execute(TwitchSubsTable.tableCreationSql());
+            Database.singleton.connection.createStatement().execute(TwitchChannelsTable.tableCreationSql());
+            
+            Database.singleton.connection.createStatement().execute(YoutubeSubsTable.tableCreationSql());
+            Database.singleton.connection.createStatement().execute(YoutubeChannelsTable.tableCreationSql());
             Logger.debug("Database base tables instantiated.");
         } catch (SQLException e) {
             Logger.error(e, "Failed to instantiate base tables.");

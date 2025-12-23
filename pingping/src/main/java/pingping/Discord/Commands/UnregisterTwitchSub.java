@@ -74,6 +74,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
             throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
         }
 
+        // TODO need to only unregister if its the last sub (if it is, remove entry in TwitchChannelsTable)
         boolean twitchApiUnsubSuccess = TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
         if (twitchApiUnsubSuccess == false) {
             throw new TwitchApiException("Failed to unregister subscription with Twitch API.");
