@@ -66,7 +66,6 @@ public class TwitchSubsTable {
             databaseConnection.commit();
         } catch (SQLException e) {
             Logger.error(e, "Failed to insert subscription with server_id {} and broadcaster_id {} into {} table.", server_id, broadcaster_id, tableName);
-            
             throw new DatabaseException("Failed to insert subscription into database.");
         } finally {
             try {

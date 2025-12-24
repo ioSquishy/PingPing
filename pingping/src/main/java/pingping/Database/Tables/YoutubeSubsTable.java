@@ -1,5 +1,6 @@
 package pingping.Database.Tables;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,23 +45,36 @@ public class YoutubeSubsTable {
     }
 
     public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String uploads_playlist_id, @NotNull String broadcaster_handle, String last_stream_video_id) throws DatabaseException {
-        final String sql = "INSERT OR IGNORE INTO " +
-            YoutubeSubsTable.tableName+"("+ YoutubeSub.ALL_COLUMNS +")" + 
-            " VALUES(?,?,?,?,?,?,?)";
-        Logger.trace("SQL: {}\n?: {}, {}, {}, {}, {}, {}, {}", sql, server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, broadcaster_handle, last_stream_video_id);
-        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+        // language=sql
+        final String sql = """
+                INSERT OR IGNORE INTO youtube_subscriptions (
+                    server_id, broadcaster_id, pingrole_id, pingchannel_id
+                ) VALUES (?, ?, ?, ?)
+                """;
+        Logger.trace("SQL: {}\n?: {}, {}, {}, {}", sql, server_id, broadcaster_id, pingrole_id, pingchannel_id);
+
+        Connection databaseConnection = Database.getConnection();
+        try (PreparedStatement statement = databaseConnection.prepareStatement(sql)) {
             Database.ServerTable.insertEntry(server_id);
             statement.setLong(1, server_id);
             statement.setString(2, broadcaster_id);
             statement.setLong(3, pingrole_id);
             statement.setLong(4, pingchannel_id);
-            statement.setString(5, uploads_playlist_id);
-            statement.setString(6, broadcaster_handle);
-            statement.setString(7, last_stream_video_id);
+
+            databaseConnection.setAutoCommit(false); // set auto commit to false so i can rollback if first call doesnt succeed
+            YoutubeChannelsTable.insertChannel(broadcaster_id, broadcaster_handle, uploads_playlist_id, last_stream_video_id);
             statement.executeUpdate();
+            databaseConnection.commit();
         } catch (SQLException e) {
             Logger.error(e, "Failed to insert subscription with server_id {} and broadcaster_id {} into {} table.", server_id, broadcaster_id, tableName);
             throw new DatabaseException("Failed to insert subscription into database.");
+        } finally {
+            try {
+                Database.getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to set database auto commit to true.");
+                throw new DatabaseException("Failed to set database auto commit to true.");
+            }
         }
     }
 
