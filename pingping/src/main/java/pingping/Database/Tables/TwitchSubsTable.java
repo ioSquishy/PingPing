@@ -21,7 +21,7 @@ public class TwitchSubsTable {
 
     public static String tableCreationSql() {
         // language=sql
-        String sql = MessageFormat.format("""
+        final String sql = MessageFormat.format("""
                 CREATE TABLE IF NOT EXISTS {0} (
                     {1} INTEGER UNIQUE NOT NULL, -- SERVER_ID
                     {2} TEXT NOT NULL, -- BROADCASTER_ID

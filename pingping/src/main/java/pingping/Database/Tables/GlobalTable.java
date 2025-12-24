@@ -30,7 +30,7 @@ public class GlobalTable {
 
     public static String tableCreationSql() {
         // language=sql
-        String sql = MessageFormat.format("""
+        final String sql = MessageFormat.format("""
                 CREATE TABLE IF NOT EXISTS {0} (
                     {1} TEXT UNIQUE NOT NULL,
                     {2} TEXT,

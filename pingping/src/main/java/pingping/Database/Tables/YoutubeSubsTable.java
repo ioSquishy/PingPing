@@ -3,6 +3,7 @@ package pingping.Database.Tables;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,17 +20,21 @@ public class YoutubeSubsTable {
     // columns in YoutubeSub.java
 
     public static String tableCreationSql() {
-        String sql = "CREATE TABLE IF NOT EXISTS " + YoutubeSubsTable.tableName + " (" +
-            StreamerSubscription.SERVER_ID + " INTEGER NOT NULL," +
-            StreamerSubscription.BROADCASTER_ID + " STRING NOT NULL," +
-            StreamerSubscription.PINGROLE_ID + " INTEGER NOT NULL," +
-            StreamerSubscription.PINGCHANNEL_ID + " INTEGER NOT NULL," +
-            YoutubeSub.UPLOADS_PLAYLIST_ID + " STRING NOT NULL," +
-            YoutubeSub.BROADCASTER_HANDLE + " STRING NOT NULL," +
-            YoutubeSub.LAST_STREAM_VIDEO_ID + " STRING," +
-            "PRIMARY KEY ("+StreamerSubscription.SERVER_ID+","+StreamerSubscription.BROADCASTER_ID+")," +
-            "FOREIGN KEY ("+StreamerSubscription.SERVER_ID+") REFERENCES "+ServerTable.tableName+"("+ServerTable.Columns.SERVER_ID+") ON DELETE CASCADE" + 
-            ");";
+        // language=sql
+        String sql = MessageFormat.format("""
+                CREATE TABLE IF NOT EXISTS {0} (
+                    {1} INTEGER UNIQUE NOT NULL, -- server_id
+                    {2} TEXT NOT NULL, -- broadcaster_id
+                    {3} INTEGER NOT NULL, -- pingrole_id
+                    {4} INTEGER NOT NULL, -- pingchannel_id
+                    PRIMARY KEY ({1}, {2}),
+                    FOREIGN KEY ({1}) REFERENCES {5}({6}) ON DELETE CASCADE,
+                    FOREIGN KEY ({2}) REFERENCES {7}({2}) ON DELETE CASCADE
+                )
+                """, YoutubeSubsTable.tableName, YoutubeSub.SERVER_ID, YoutubeSub.BROADCASTER_ID,
+                    YoutubeSub.PINGROLE_ID, YoutubeSub.PINGCHANNEL_ID,
+                    ServerTable.tableName, ServerTable.Columns.SERVER_ID,
+                    YoutubeChannelsTable.tableName);
         Logger.trace("Youtube table create SQL: {}", sql);
         return sql;
     }

@@ -162,6 +162,7 @@ public class TwitchAPI {
         HystrixCommand<Void> command = TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(null, eventsub_id);
         command.execute();
         if (command.isSuccessfulExecution()) {
+            // TODO remove TwitchChannelsTable entry from database
             Logger.debug("Unregistered subscription for eventsub_id: {}", eventsub_id);
             return true;
         } else {

@@ -24,7 +24,7 @@ public class ServerTable {
     }
 
     public static String tableCreationSql() {
-        String sql = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
+        final String sql = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
             ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
             ");";
         Logger.trace("Server table create SQL: {}", sql);

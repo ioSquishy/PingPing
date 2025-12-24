@@ -17,7 +17,7 @@ public class TwitchChannelsTable {
 
     public static String tableCreationSql() {
         // language=sql
-        String sql = MessageFormat.format("""
+        final String sql = MessageFormat.format("""
             CREATE TABLE IF NOT EXISTS {0} (
                 {1} TEXT UNIQUE NOT NULL, -- broadcaster_id
                 {2} TEXT -- eventsub_id

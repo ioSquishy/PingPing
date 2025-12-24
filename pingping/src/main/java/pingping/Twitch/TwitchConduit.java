@@ -189,6 +189,8 @@ public class TwitchConduit {
      * @return true if deregistration was successful
      */
     public boolean unregisterSubscription(String eventsub_id) {
+        // TODO remove TwitchSubsTable entry from database
+        // TODO pull number of subs remaining in database for this eventsub_id, if 0, call unregisterEventSubscription
         return TwitchAPI.unregisterEventSubscription(eventsub_id);
     }
 
