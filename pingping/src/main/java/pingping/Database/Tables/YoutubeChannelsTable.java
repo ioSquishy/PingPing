@@ -63,5 +63,18 @@ public class YoutubeChannelsTable {
         }
     }
 
-    // TODO add method to remove entry; called from UnregisterYoutubeSub.java
+    // TODO call from UnregisterYoutubeSub.java
+    public static void removeChannel(@NotNull String broadcaster_id) throws DatabaseException {
+        final String sql = "DELETE FROM youtube_channels WHERE broadcaster_id = ?";
+        Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, broadcaster_id);
+            statement.executeUpdate();
+            Logger.debug("Removed youtube channel from database for broadcaster with id {}", broadcaster_id);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to remove youtube channel from database for broadcasters with id {}", broadcaster_id);
+            throw new DatabaseException("Failed to remove youtube channel from database.");
+        }
+    }
 }

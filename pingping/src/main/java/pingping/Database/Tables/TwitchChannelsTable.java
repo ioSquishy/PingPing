@@ -42,9 +42,7 @@ public class TwitchChannelsTable {
     }
 
     protected static void setEventSubId(@NotNull String broadcaster_id, @NotNull String eventsub_id) throws DatabaseException {
-        final String sql = "UPDATE " + TwitchChannelsTable.tableName +
-            " SET " + TwitchSub.EVENTSUB_ID + " = ?" +
-            " WHERE " + TwitchSub.BROADCASTER_ID + " = ?";
+        final String sql = "UPDATE twitch_channels SET eventsub_id = ? WHERE broadcaster_id = ?";
         Logger.trace("SQL: {}\n?: {}", eventsub_id, broadcaster_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -58,5 +56,18 @@ public class TwitchChannelsTable {
         }
     }
 
-    // TODO add a method to remove entry; called from Discord.Commands.UnregisterTwitchSub.java
+    // TODO call from Discord.Commands.UnregisterTwitchSub.java
+    public static void removeChannel(@NotNull String broadcaster_id) throws DatabaseException {
+        final String sql = "DELETE FROM twitch_channels WHERE broadcaster_id = ?";
+        Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, broadcaster_id);
+            statement.executeUpdate();
+            Logger.debug("Removed twitch channel from database for broadcaster with id {}", broadcaster_id);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to remove twitch channel from database for broadcasters with id {}", broadcaster_id);
+            throw new DatabaseException("Failed to remove twitch channel from database.");
+        }
+    }
 }
