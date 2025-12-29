@@ -55,4 +55,6 @@ public class TwitchChannelsTable {
             throw new DatabaseException("Failed to update eventSubIds in database.");
         }
     }
+
+    // TODO add a method to remove entry; called from Discord.Commands.UnregisterTwitchSub.java
 }

@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
-import pingping.Database.OrmObjects.StreamerSubscription;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 
@@ -101,9 +100,14 @@ public class YoutubeSubsTable {
      * @throws DatabaseException if sql fails for some reason
      */
     public static List<YoutubeSub> pullYoutubeSubsFromBroadcasterId(@NotNull String broadcaster_id) throws DatabaseException {
-        final String sql = "SELECT " + YoutubeSub.ALL_COLUMNS +
-            " FROM " + YoutubeSubsTable.tableName +
-            " WHERE " + YoutubeSub.BROADCASTER_ID + " = ?";
+        // language=sql
+        final String sql = """
+                SELECT
+                    YS.server_id, YS.broadcaster_id, YS.pingrole_id, YS.pingchannel_id,
+                    YC.uploads_playlist_id, YC.broadcaster_handle, YC.last_stream_vid_id
+                FROM youtube_subscriptions YS JOIN youtube_channels YC ON YS.broadcaster_id = YC.broadcaster_id
+                WHERE YS.broadcaster_id = ?
+                """;
         Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -128,9 +132,14 @@ public class YoutubeSubsTable {
      * @throws DatabaseException if sql fails for some reason
      */
     public static List<YoutubeSub> pullYoutubeSubsFromServerId(long server_id) throws DatabaseException {
-        final String sql = "SELECT " + YoutubeSub.ALL_COLUMNS +
-            " FROM " + YoutubeSubsTable.tableName +
-            " WHERE " + YoutubeSub.SERVER_ID + " = ?";
+        // language=sql
+        final String sql = """
+                SELECT
+                    YS.server_id, YS.broadcaster_id, YS.pingrole_id, YS.pingchannel_id,
+                    YC.uploads_playlist_id, YC.broadcaster_handle, YC.last_stream_vid_id
+                FROM youtube_subscriptions YS JOIN youtube_channels YC ON YS.broadcaster_id = YC.broadcaster_id
+                WHERE YS.server_id = ?
+                """;
         Logger.trace("SQL: {}\n?: {}", sql, server_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -155,11 +164,15 @@ public class YoutubeSubsTable {
      * @throws DatabaseException if connection to database unsuccessful or sql exception
      */
     public static YoutubeSub pullYoutubeSub(long server_id, @NotNull String broadcaster_id) throws DatabaseException {
-        final String sql = "SELECT " + YoutubeSub.ALL_COLUMNS +
-            " FROM " + YoutubeSubsTable.tableName +
-            " WHERE " + YoutubeSub.SERVER_ID + " = ?" +
-                " AND " + YoutubeSub.BROADCASTER_ID + " = ?" +
-            " LIMIT 1";
+        // language=sql
+        final String sql = """
+                SELECT
+                    YS.server_id, YS.broadcaster_id, YS.pingrole_id, YS.pingchannel_id,
+                    YC.uploads_playlist_id, YC.broadcaster_handle, YC.last_stream_vid_id
+                FROM youtube_subscriptions YS JOIN youtube_channels YC ON YS.broadcaster_id = YC.broadcaster_id
+                WHERE YS.server_id = ? AND YS.broadcaster_id = ?
+                LIMIT 1
+                """;
         Logger.trace("SQL: {}\n?: {}, {}", sql, server_id, broadcaster_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -183,8 +196,7 @@ public class YoutubeSubsTable {
      * @throws DatabaseException if sql fails for some reason
      */
     public static List<String> pullSubscriptionBroadcasterIds() throws DatabaseException {
-        final String sql = "SELECT DISTINCT " + YoutubeSub.BROADCASTER_ID +
-            " FROM " + YoutubeSubsTable.tableName;
+        final String sql = "SELECT DISTINCT broadcaster_id FROM youtube_subscriptions";
         Logger.trace("SQL: {}", sql);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -203,9 +215,7 @@ public class YoutubeSubsTable {
     }
 
     public static void removeSubscription(long server_id, @NotNull String broadcaster_id) throws DatabaseException {
-        final String sql = "DELETE FROM " + YoutubeSubsTable.tableName + 
-            " WHERE " + YoutubeSub.SERVER_ID + " = ?" +
-                " AND " + YoutubeSub.BROADCASTER_ID + " = ?";
+        final String sql = "DELETE FROM youtube_subscriptions WHERE server_id = ? AND broadcaster_id = ?";
         Logger.trace("SQL: {}\n?: {}", server_id, broadcaster_id);
         
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
@@ -220,50 +230,6 @@ public class YoutubeSubsTable {
     }
 
     public static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
-        final String sql = "UPDATE " + YoutubeSubsTable.tableName +
-            " SET " + YoutubeSub.LAST_STREAM_VIDEO_ID + " = ?" +
-            " WHERE " + YoutubeSub.BROADCASTER_ID + " = ?";
-        Logger.trace("SQL: {}\n?: {}", last_stream_video_id, broadcaster_id);
-
-        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-            statement.setString(1, last_stream_video_id);
-            statement.setString(2, broadcaster_id);
-            statement.executeUpdate();
-            Logger.debug("Updated last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
-        } catch (SQLException e) {
-            Logger.error(e, "Failed to update last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
-            throw new DatabaseException("Failed to update last_stream_video_id in database.");
-        }
-    }
-
-    public static void updateSubscription(long server_id, @NotNull String broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id, @NotNull String updated_uploads_playlist_id, @NotNull String updated_broadcaster_handle, String updated_last_stream_video_id) throws DatabaseException {
-        final String sql = "UPDATE " + YoutubeSubsTable.tableName + 
-            " SET " + YoutubeSub.PINGROLE_ID + " = ? ," +
-                YoutubeSub.PINGCHANNEL_ID + " = ?," +
-                YoutubeSub.UPLOADS_PLAYLIST_ID + " = ?," + 
-                YoutubeSub.BROADCASTER_HANDLE + " = ?," +
-                YoutubeSub.LAST_STREAM_VIDEO_ID + " = ?" +
-            " WHERE " + YoutubeSub.SERVER_ID + " = ?" +
-                " AND " + YoutubeSub.BROADCASTER_ID + " = ?";
-        Logger.trace("SQL: {}\n?: {},{},{},{},{},{},{}", sql, updated_pingrole_id, updated_pingchannel_id, updated_uploads_playlist_id, updated_broadcaster_handle, updated_last_stream_video_id, server_id, broadcaster_id);
-        
-        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
-            statement.setLong(1, updated_pingrole_id);
-            statement.setLong(2, updated_pingchannel_id);
-            statement.setString(3, updated_uploads_playlist_id);
-            statement.setString(4, updated_broadcaster_handle);
-            statement.setString(5, updated_last_stream_video_id);
-            statement.setLong(6, server_id);
-            statement.setString(7, broadcaster_id);
-            statement.executeUpdate();
-            Logger.debug("Updated sub in database with server id {} and broadcaster id {}", server_id, broadcaster_id);
-        } catch (SQLException e) {
-            Logger.error(e, "Failed to update subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
-            throw new DatabaseException("Failed to update subscription in database.");
-        }
-    }
-
-    public static void updateSubscription(@NotNull YoutubeSub updated_youtube_sub) throws DatabaseException {
-        updateSubscription(updated_youtube_sub.server_id, updated_youtube_sub.broadcaster_id, updated_youtube_sub.pingrole_id, updated_youtube_sub.pingchannel_id, updated_youtube_sub.uploads_playlist_id, updated_youtube_sub.broadcaster_handle, updated_youtube_sub.last_stream_video_id);
+        YoutubeChannelsTable.setLastStreamVideoId(broadcaster_id, last_stream_video_id);
     }
 }

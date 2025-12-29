@@ -47,4 +47,21 @@ public class YoutubeChannelsTable {
             throw new DatabaseException("Failed to insert channel into database.");
         }
     }
+
+    protected static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
+        final String sql = "UPDATE youtube_channels SET last_stream_vid_id = ? WHERE broadcaster_id = ?";
+        Logger.trace("SQL: {}\n?: {}", last_stream_video_id, broadcaster_id);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, last_stream_video_id);
+            statement.setString(2, broadcaster_id);
+            statement.executeUpdate();
+            Logger.debug("Updated last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to update last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
+            throw new DatabaseException("Failed to update last_stream_video_id in database.");
+        }
+    }
+
+    // TODO add method to remove entry; called from UnregisterYoutubeSub.java
 }
