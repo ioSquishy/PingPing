@@ -8,7 +8,6 @@ import pingping.Discord.Events.ErrorLogEvent;
 import pingping.Twitch.TwitchConduit;
 
 public class Main {
-    public static final byte INSTANCE_ID = 0;
     public static void main(String[] args) {
         ConsoleCommands.startListenerThread();
         try {

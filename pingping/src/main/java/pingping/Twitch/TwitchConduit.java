@@ -21,7 +21,6 @@ import com.github.twitch4j.eventsub.socket.conduit.exceptions.ShardTimeoutExcept
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import pingping.Main;
 import pingping.Database.Database;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
@@ -38,19 +37,19 @@ public class TwitchConduit {
      * @throws TwitchApiException  if conduit registration is unsuccessful
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
-    private TwitchConduit(long bot_id) throws TwitchApiException, DatabaseException {
-        Logger.warn("Existing TwitchConduit instance not found; Initializing new instance for bot id: {}", bot_id);
+    private TwitchConduit() throws TwitchApiException, DatabaseException {
+        Logger.warn("Existing TwitchConduit instance not found; Initializing new instance.");
         String potentialConduitId = Database.GlobalTable.getValue(GLOBAL_TABLE_CONDUIT_KEY);
         if (potentialConduitId == null) {
-            Logger.warn("No existing conduit id in database found for bot id {}", bot_id);
+            Logger.warn("No existing conduit id in database found.");
         } else {
-            Logger.debug("Potential conduit id for bot id {}: {}", bot_id, potentialConduitId);
+            Logger.debug("Potential conduit id: {}", potentialConduitId);
         }
         if (setConduit(potentialConduitId)) {
             String actualConduitId = conduit.getConduitId();
-            Logger.debug("Setting conduit id for bot id {} to {}", bot_id, actualConduitId);
-            Database.GlobalTable.setValue(GLOBAL_TABLE_CONDUIT_KEY, actualConduitId);
-            Logger.debug("Set conduit id for bot id {} to {}", bot_id, actualConduitId);
+            Logger.debug("Setting conduit id to {}", actualConduitId);
+            Database.GlobalTable.putValue(GLOBAL_TABLE_CONDUIT_KEY, actualConduitId);
+            Logger.debug("Set conduit id to {}", actualConduitId);
             self = this;
             Logger.info("Twitch conduit connected.");
         } else {
@@ -137,15 +136,7 @@ public class TwitchConduit {
      * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
      */
     public static TwitchConduit getConduit() throws TwitchApiException, DatabaseException {
-        return getConduit(Main.INSTANCE_ID);
-    }
-
-    /**
-     * @throws TwitchApiException if conduit registration unsuccessful
-     * @throws DatabaseException if database connection unsuccessful or fails to store conduit id
-     */
-    private static TwitchConduit getConduit(byte instance_id) throws TwitchApiException, DatabaseException {
-        TwitchConduit con = self == null ? new TwitchConduit(instance_id) : self;
+        TwitchConduit con = self == null ? new TwitchConduit() : self;
         return con;
     }
 

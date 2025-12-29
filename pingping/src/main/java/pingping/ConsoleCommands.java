@@ -19,6 +19,7 @@ public class ConsoleCommands {
                         System.out.println("\"stop\" - stops application completely and cleanly");
                         System.out.println("\"status\" - returns latency and connection statuses");
                         System.out.println("\"delete-conduits\" - deletes all registered conduits from TwitchAPI");
+                        break;
                     case "stop":
                         System.out.println("-Stopping application.");
                         scanner.close();
