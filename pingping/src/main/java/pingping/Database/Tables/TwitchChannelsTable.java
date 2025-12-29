@@ -20,8 +20,10 @@ public class TwitchChannelsTable {
         final String sql = MessageFormat.format("""
             CREATE TABLE IF NOT EXISTS {0} (
                 {1} TEXT UNIQUE NOT NULL, -- broadcaster_id
-                {2} TEXT -- eventsub_id
-                )""", TwitchChannelsTable.tableName, TwitchSub.BROADCASTER_ID, TwitchSub.EVENTSUB_ID);
+                {2} TEXT, -- eventsub_id
+                PRIMARY KEY ({1})
+            )
+            """, TwitchChannelsTable.tableName, TwitchSub.BROADCASTER_ID, TwitchSub.EVENTSUB_ID);
         Logger.trace("TwitchChannelsTable table craete SQL: {}", sql);
         return sql;
     }

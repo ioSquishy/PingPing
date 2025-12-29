@@ -2,6 +2,7 @@ package pingping.Database.Tables;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 
 import org.tinylog.Logger;
 
@@ -24,9 +25,13 @@ public class ServerTable {
     }
 
     public static String tableCreationSql() {
-        final String sql = "CREATE TABLE IF NOT EXISTS " + ServerTable.tableName + " (" +
-            ServerTable.Columns.SERVER_ID + " INTEGER PRIMARY KEY" +
-            ");";
+        // language=sql
+        final String sql = MessageFormat.format("""
+                CREATE TABLE IF NOT EXISTS {0} (
+                    {1} INTEGER UNIQUE NOT NULL, -- server_id
+                    PRIMARY KEY ({1})
+                )
+                """, ServerTable.tableName, ServerTable.Columns.SERVER_ID);
         Logger.trace("Server table create SQL: {}", sql);
         return sql;
     }
