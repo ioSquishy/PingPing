@@ -13,6 +13,8 @@ public class LivePoller {
     private static Runnable pollApi() {
         return () -> {
             // pull playlist ids from database
+            // use YoutubeApi.getActiveLivestream
+            // use PushStreamNotification
         };
     }
 

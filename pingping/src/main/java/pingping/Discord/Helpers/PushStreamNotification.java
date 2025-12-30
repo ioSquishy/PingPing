@@ -63,4 +63,6 @@ public class PushStreamNotification {
             .setColor(color.orElse(Constants.twitch_purple))
             .setTimestampToNow();
     }
+
+    // TODO create push method for Youtube subs
 }
