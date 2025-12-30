@@ -17,6 +17,8 @@ import com.github.twitch4j.helix.domain.StreamList;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 import com.netflix.hystrix.HystrixCommand;
+import com.netflix.hystrix.exception.HystrixBadRequestException;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import pingping.Exceptions.InvalidArgumentException;
@@ -160,9 +162,12 @@ public class TwitchAPI {
 
     public static boolean unregisterEventSubscription(String eventsub_id) {
         HystrixCommand<Void> command = TwitchAPI.twitchClient.getHelix().deleteEventSubSubscription(null, eventsub_id);
-        command.execute();
+        try {
+            command.execute();
+        } catch (HystrixRuntimeException | HystrixBadRequestException e) {
+            Logger.error(e);
+        }
         if (command.isSuccessfulExecution()) {
-            // TODO remove TwitchChannelsTable entry from database
             Logger.debug("Unregistered subscription for eventsub_id: {}", eventsub_id);
             return true;
         } else {

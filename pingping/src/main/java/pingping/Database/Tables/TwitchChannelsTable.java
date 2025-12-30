@@ -56,7 +56,11 @@ public class TwitchChannelsTable {
         }
     }
 
-    // TODO call from Discord.Commands.UnregisterTwitchSub.java
+    /**
+     * Removes this entry from this table and all child entries (with same broadcaster_id) from TwitchSubsTable
+     * @param broadcaster_id
+     * @throws DatabaseException
+     */
     public static void removeChannel(@NotNull String broadcaster_id) throws DatabaseException {
         final String sql = "DELETE FROM twitch_channels WHERE broadcaster_id = ?";
         Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);

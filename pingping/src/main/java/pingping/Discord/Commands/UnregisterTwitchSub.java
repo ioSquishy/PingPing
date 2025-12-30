@@ -65,33 +65,41 @@ public class UnregisterTwitchSub extends DiscordCommand {
         }
     }
 
+    /**
+     * Unregister twitch subscription for a server
+     * If that server is the last subscription to the broadcaster, subscription will be removed from Twitch API as well
+     * If unregistration fails, subscription will be re-added to database
+     * @param server_id
+     * @param twitch_channel
+     * @throws InvalidArgumentException if twitch channel doesn't exist
+     * @throws DatabaseException if database modification fails
+     * @throws TwitchApiException if unregistration through API fails
+     */
     public static void unregisterSub(long server_id, String twitch_channel) throws InvalidArgumentException, DatabaseException, TwitchApiException {
         Logger.trace("{} command ran with arguments: server_id={}, twitch_channel={}", commandName, server_id, twitch_channel);
         String broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
 
+        // get sub (if it exists)
         TwitchSub sub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
         if (sub == null) {
             throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
         }
 
-        // TODO need to only unregister if its the last sub (if it is, remove entry in TwitchChannelsTable)
-        boolean twitchApiUnsubSuccess = TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
-        if (twitchApiUnsubSuccess == false) {
-            throw new TwitchApiException("Failed to unregister subscription with Twitch API.");
-        }
+        // remove subscription from database
+        Database.TwitchSubsTable.removeSubscription(server_id, broadcaster_id);
 
-        try {
-            Database.TwitchSubsTable.removeSubscription(server_id, broadcaster_id);
-        } catch (DatabaseException e) {
-            Logger.error(e, "Successfully found and removed twitch subscription but failed to remove entry from database. Reverting changes...");
-            // revert changes
-            try {
-                TwitchConduit.getConduit().registerSubscriptionById(broadcaster_id);
-                throw e;
-            } catch (Exception e2) {
-                Logger.error(e2, "Failed to revert changes.");
+        // if no more servers are subscribed, unregister from twitch api and remove from TwitchChannelsTable
+        if (Database.TwitchSubsTable.getNumSubsForBroadcasterId(broadcaster_id) == 0) {
+            Database.TwitchChannelsTable.removeChannel(broadcaster_id);
+
+            // unregister from twitch api
+            boolean twitchApiUnsubSuccess = TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
+            if (twitchApiUnsubSuccess == false) {
+                Database.TwitchSubsTable.insertSubscription(sub); // re-register sub if unregistration failed
+                throw new TwitchApiException("FAILED to unregister subscription with Twitch API. Subscription is still active.");
             }
         }
+
         Logger.debug("Unregistered twitch sub for streamer {} from server {}", twitch_channel, server_id);
     }
 }
