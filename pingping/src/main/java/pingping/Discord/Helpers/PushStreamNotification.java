@@ -12,6 +12,7 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 
 import pingping.Database.OrmObjects.TwitchSub;
+import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Discord.Constants;
 import pingping.Discord.DiscordAPI;
 import pingping.Exceptions.InvalidArgumentException;
@@ -65,4 +66,7 @@ public class PushStreamNotification {
     }
 
     // TODO create push method for Youtube subs
+    public static void pushYoutubeStreamNotification(YoutubeSub sub) {
+        
+    }
 }

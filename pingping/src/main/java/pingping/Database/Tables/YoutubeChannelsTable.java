@@ -52,7 +52,12 @@ public class YoutubeChannelsTable {
         }
     }
 
-    protected static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
+    // TODO
+    public static void setBroadcasterHandle(@NotNull String broadcaster_id, @NotNull String new_broadcaster_handle) throws DatabaseException {
+
+    }
+
+    public static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
         final String sql = "UPDATE youtube_channels SET last_stream_vid_id = ? WHERE broadcaster_id = ?";
         Logger.trace("SQL: {}\n?: {},{}", sql, last_stream_video_id, broadcaster_id);
 
@@ -67,6 +72,12 @@ public class YoutubeChannelsTable {
         }
     }
 
+    /**
+     * Gets the broadcaster_id, uploads_playlist_id, broadcaster_handle, and last_stream_video_id of all channels in the database.
+     * Does not get server-specific info like server_id, pingchannel_id, and pingrole_id
+     * @return list of YoutubeChannel objects; notice it is different from YoutubeSub
+     * @throws DatabaseException
+     */
     public static List<YoutubeChannel> getAllChannelInfo() throws DatabaseException {
         final String sql = "SELECT * FROM youtube_channels";
         Logger.trace("SQL: {}", sql);

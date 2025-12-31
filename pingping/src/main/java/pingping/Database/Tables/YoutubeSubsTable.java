@@ -228,8 +228,4 @@ public class YoutubeSubsTable {
             throw new DatabaseException("Failed to remove subscription in database.");
         }
     }
-
-    public static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
-        YoutubeChannelsTable.setLastStreamVideoId(broadcaster_id, last_stream_video_id);
-    }
 }
