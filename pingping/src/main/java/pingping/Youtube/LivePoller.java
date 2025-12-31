@@ -12,8 +12,11 @@ public class LivePoller {
 
     private static Runnable pollApi() {
         return () -> {
-            // pull playlist ids from database
+            // pull youtube channels from database
             // use YoutubeApi.getActiveLivestream
+            // if its active, make sure video id is not the same as last one stored in database
+            // get all server ids with that broadcaster
+            // store new last video id in database
             // use PushStreamNotification
         };
     }

@@ -39,12 +39,11 @@ public class YoutubeAPI {
     }
 
     /**
-     * @param channelHandle
+     * @param uploadsPlaylistId
      * @return the video if they are live, or else an empty optional
      * @throws YoutubeApiException
      */
-    public static Optional<Video> getActiveLivestream(String channelHandle) throws YoutubeApiException {
-        String uploadsPlaylistId = getChannelUploadsPlaylistId(channelHandle);
+    public static Optional<Video> getActiveLivestream(String uploadsPlaylistId) throws YoutubeApiException {
         String latestUploadId = getLatestUploadVideoId(uploadsPlaylistId);
         Video latestVideo = getVideo(latestUploadId);
         if (isVideoLive(latestVideo)) {
@@ -57,7 +56,7 @@ public class YoutubeAPI {
     /**
      * 
      * @param channelHandle
-     * @return
+     * @return Channel object of channel
      * @throws YoutubeApiException if channel not found or IO exception
      */
     public static Channel getChannel(String channelHandle) throws YoutubeApiException {

@@ -1,13 +1,17 @@
 package pingping.Database.Tables;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import pingping.Database.Database;
+import pingping.Database.OrmObjects.YoutubeChannel;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 
@@ -50,7 +54,7 @@ public class YoutubeChannelsTable {
 
     protected static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
         final String sql = "UPDATE youtube_channels SET last_stream_vid_id = ? WHERE broadcaster_id = ?";
-        Logger.trace("SQL: {}\n?: {}", last_stream_video_id, broadcaster_id);
+        Logger.trace("SQL: {}\n?: {},{}", sql, last_stream_video_id, broadcaster_id);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
             statement.setString(1, last_stream_video_id);
@@ -60,6 +64,30 @@ public class YoutubeChannelsTable {
         } catch (SQLException e) {
             Logger.error(e, "Failed to update last_stream_video_id in database for broadcasters with id {} to {}", broadcaster_id, last_stream_video_id);
             throw new DatabaseException("Failed to update last_stream_video_id in database.");
+        }
+    }
+
+    public static List<YoutubeChannel> getAllChannelInfo() throws DatabaseException {
+        final String sql = "SELECT * FROM youtube_channels";
+        Logger.trace("SQL: {}", sql);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            ResultSet resultSet = statement.executeQuery();
+
+            List<YoutubeChannel> channels = new ArrayList<YoutubeChannel>();
+            while (resultSet.next()) {
+                String broadcaster_id = resultSet.getString(YoutubeSub.BROADCASTER_ID.SQL_COLUMN);
+                String uploads_playlist_id = resultSet.getString(YoutubeSub.UPLOADS_PLAYLIST_ID.SQL_COLUMN);
+                String broadcaster_handle = resultSet.getString(YoutubeSub.BROADCASTER_HANDLE.SQL_COLUMN);
+                String last_stream_vid_id = resultSet.getString(YoutubeSub.LAST_STREAM_VIDEO_ID.SQL_COLUMN);
+                YoutubeChannel yc = new YoutubeChannel(broadcaster_id, uploads_playlist_id, broadcaster_handle, last_stream_vid_id);
+                channels.add(yc);
+            }
+            Logger.trace("Pulled {} distinct youtube channbels from database. {}", channels.size());
+            return channels;
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to pull youtube channels.");
+            throw new DatabaseException("Failed to pull youtube channels from database.");
         }
     }
 
