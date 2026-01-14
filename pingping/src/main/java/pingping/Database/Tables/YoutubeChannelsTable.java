@@ -52,9 +52,19 @@ public class YoutubeChannelsTable {
         }
     }
 
-    // TODO
     public static void setBroadcasterHandle(@NotNull String broadcaster_id, @NotNull String new_broadcaster_handle) throws DatabaseException {
+        final String sql = "UPDATE youtube_channels SET broadcaster_handle = ? WHERE broadcaster_id = ?";
+        Logger.trace("SQL: {}\n?: {},{}", sql, new_broadcaster_handle, broadcaster_id);
 
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, new_broadcaster_handle);
+            statement.setString(2, broadcaster_id);
+            statement.executeUpdate();
+            Logger.debug("Updated broadcaster_handle in database for broadcasters with id {} to {}", broadcaster_id, new_broadcaster_handle);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to update broadcaster_handle in database for broadcasters with id {} to {}", broadcaster_id, new_broadcaster_handle);
+            throw new DatabaseException("Failed to update last_stream_video_id in database.");
+        }
     }
 
     public static void setLastStreamVideoId(@NotNull String broadcaster_id, @NotNull String last_stream_video_id) throws DatabaseException {
