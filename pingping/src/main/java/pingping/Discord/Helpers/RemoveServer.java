@@ -6,6 +6,7 @@ import org.tinylog.Logger;
 
 import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
+import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.TwitchApiException;
 import pingping.Twitch.TwitchConduit;
@@ -16,15 +17,23 @@ public class RemoveServer {
      */
     public static void removeServer(long server_id) {
         try {
-            // unregister subscription if no other server is subscribed
-            List<String> broadcasterIds = Database.TwitchSubsTable.pullSubscriptionBroadcasterIds();
-            for (String broadcasterId : broadcasterIds) {
-                List<TwitchSub> broadcasterSubs = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcasterId);
-                if (broadcasterSubs.size() == 1) { // size will be 1 if this is the only server with a subscription to the broadcaster
-                    TwitchConduit.getConduit().unregisterSubscription(broadcasterSubs.get(0).eventsub_id);
+            // unregister twitch subscription if no other server is subscribed
+            List<TwitchSub> twitchSubs = Database.TwitchSubsTable.pullTwitchSubsFromServerId(server_id);
+            for (TwitchSub sub : twitchSubs) {
+                if (Database.TwitchSubsTable.getNumSubsForBroadcasterId(sub.broadcaster_id) == 1) {
+                    TwitchConduit.getConduit().unregisterSubscription(sub.eventsub_id);
+                }
+            }
+
+            // remove youtube channel from channels table if this server has the only sub
+            List<YoutubeSub> youtubeSubs = Database.YoutubeSubsTable.pullYoutubeSubsFromServerId(server_id);
+            for (YoutubeSub sub : youtubeSubs) {
+                if (Database.YoutubeSubsTable.getNumSubsForBroadcasterId(sub.broadcaster_id) == 1) {
+                    Database.YoutubeChannelsTable.removeChannel(sub.broadcaster_handle);
                 }
             }
             
+            // remove server from db, will clear subscription-level entries
             Database.ServerTable.removeEntry(server_id);
         } catch (TwitchApiException | DatabaseException e) {
             Logger.error(e, "Failed to remove server from database with id {}", server_id);

@@ -228,4 +228,27 @@ public class YoutubeSubsTable {
             throw new DatabaseException("Failed to remove subscription in database.");
         }
     }
+
+    /**
+     * Gets the count of servers with subscriptions to a broadcaster
+     * @param broadcaster_id
+     * @return
+     * @throws DatabaseException
+     */
+    public static int getNumSubsForBroadcasterId(@NotNull String broadcaster_id) throws DatabaseException {
+        final String sql = "SELECT COUNT(server_id) FROM youtube_subscriptions WHERE broadcaster_id = ?";
+        Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, broadcaster_id);
+            ResultSet resultSet = statement.executeQuery();
+            int numSubs = resultSet.getInt(1); 
+
+            Logger.trace("{} number of subs for broadcaster_id {}", numSubs, broadcaster_id);
+            return resultSet.getInt(1);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to pull youtube subs with broadcaster id {}.", broadcaster_id);
+            throw new DatabaseException("Failed to pull youtube subs from database.");
+        }
+    }
 }
