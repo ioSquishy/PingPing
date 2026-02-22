@@ -8,6 +8,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.tinylog.Logger;
 
 import pingping.Database.OrmObjects.StreamerSubscription;
+import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Discord.Constants;
 import pingping.Exceptions.InvalidArgumentException;
 import pingping.Exceptions.TwitchApiException;
@@ -34,7 +35,7 @@ public class SubscriptionsEmbed {
         final int maxLinesPerField = maxFieldCharLength / singleMaxLineLengthEstimate;
         final int numEmbedsNeeded = Math.ceilDiv(subscriptionSize, maxLinesPerField);
         final String delimiter = "\n";
-        Logger.trace("Running embedTwitchSubs with numEmbedsNeeded={} for subscription_size={}", numEmbedsNeeded, subscriptionSize);
+        Logger.trace("Running embedSubscriptions with numEmbedsNeeded={} for subscription_size={}", numEmbedsNeeded, subscriptionSize);
         int subListsSizeSum = 0;
         for (int embedNum = 1; embedNum <= numEmbedsNeeded; embedNum++) {
             int subListStart = (embedNum - 1) * (maxLinesPerField + 1);
@@ -57,6 +58,10 @@ public class SubscriptionsEmbed {
                 embedColor = Constants.twitch_purple;
                 subType = "Twitch";
                 break;
+            case "YoutubeSub":
+                embedColor = Constants.youtube_red;
+                subType = "Youtube";
+                break;
             default: Logger.error("Received unknown StreamerSubscription type: {}", subType);
         }
 
@@ -78,7 +83,7 @@ public class SubscriptionsEmbed {
         try {
             switch (subType) {
                 case "TwitchSub": return TwitchAPI.getUserById(subscription.broadcaster_id).getDisplayName();
-                case "YoutubeSub": //TODO
+                case "YoutubeSub": return ((YoutubeSub) subscription).broadcaster_handle;
                 default:
                     Logger.error("Received unknown StreamerSubscription type: {}", subType);
                     return subscription.broadcaster_id;

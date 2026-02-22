@@ -28,7 +28,7 @@ public class ListTwitchSubs extends DiscordCommand {
     protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
-            .setDescription("List registered twitch subscriptions for this server.")
+            .setDescription("List registered Twitch subscriptions for this server.")
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false));
     }
