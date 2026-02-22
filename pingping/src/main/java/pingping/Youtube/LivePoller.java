@@ -49,10 +49,13 @@ public class LivePoller {
                     // store new last video id in database
                     Database.YoutubeChannelsTable.setLastStreamVideoId(dbChannelInfo.broadcaster_id, currentStream.getId());
 
+                    // get channel profile picture
+                    String pfpUrl = YoutubeAPI.getChannel(currentStream.getSnippet().getChannelTitle()).getSnippet().getThumbnails().getMedium().getUrl();
+
                     // get all subscriptions (for individual servers) with that broadcaster and push stream notification
                     List<YoutubeSub> subs = Database.YoutubeSubsTable.pullYoutubeSubsFromBroadcasterId(dbChannelInfo.broadcaster_id);
                     for (YoutubeSub sub : subs) {
-                        PushStreamNotification.pushYoutubeStreamNotification(sub);
+                        PushStreamNotification.pushYoutubeStreamNotification(sub, currentStream, pfpUrl);
                     }
                 } catch (DatabaseException | YoutubeApiException e) {
                     Logger.error(e);

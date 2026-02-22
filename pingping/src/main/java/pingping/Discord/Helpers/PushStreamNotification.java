@@ -10,7 +10,9 @@ import java.awt.Color;
 
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
+import com.google.api.services.youtube.model.Video;
 
+import pingping.Database.OrmObjects.StreamerSubscription;
 import pingping.Database.OrmObjects.TwitchSub;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Discord.Constants;
@@ -20,36 +22,77 @@ import pingping.Exceptions.TwitchApiException;
 import pingping.Twitch.TwitchAPI;
 
 public class PushStreamNotification {
-    private static final String twitch_stream_url_prefix = "https://www.twitch.tv/";
+    private static final String twitch_stream_url_prefix = "https://www.twitch.tv/"; // + streamer_name
+    private static final String youtube_stream_url_prefix = "https://www.youtube.com/live/"; // + video_id
 
-    public static void pushTwitchStreamNotification(TwitchSub twitchSub, String streamer_name) {
-        Logger.trace("Pushing stream notification for broadcaster id {} in server id {}", twitchSub.broadcaster_id, twitchSub.server_id);
+    /**
+     * Pushes a Twitch stream notification
+     * @param sub subscription to push notification for
+     * @param streamer_name streamer name (used for fallback URL if embed creation fails)
+     */
+    public static void pushTwitchStreamNotification(TwitchSub sub, String streamer_name) {
+        pushStreamNotification(sub, streamer_name, null, null);
+    }
 
-        Optional<Server> optionalServer = DiscordAPI.getAPI().getServerById(twitchSub.server_id);
+    /**
+     * Pushes a Youtube stream notification
+     * @param sub subscription to push notification for
+     * @param stream stream object with stream info for embed
+     * @param pfp_url profile picture of streamer for embed
+     */
+    public static void pushYoutubeStreamNotification(YoutubeSub sub, Video stream, String pfp_url) {
+        pushStreamNotification(sub, null, stream, pfp_url);
+    }
+
+    /**
+     * Pushes a stream notification to server for that sub
+     * @param sub subscription to push notification for
+     * @param streamer_name (for Twitch) name of streamer
+     * @param yt_stream (for Youtube) Video object of stream
+     * @param yt_pfp_url (for Youtube) URL of streamer profile picture
+     */
+    private static void pushStreamNotification(StreamerSubscription sub, String streamer_name, Video yt_stream, String yt_pfp_url) {
+        Logger.trace("Pushing stream notification for broadcaster id {} in server id {}", sub.broadcaster_id, sub.server_id);
+
+        Optional<Server> optionalServer = DiscordAPI.getAPI().getServerById(sub.server_id);
         if (optionalServer.isEmpty()) {
             // remove server from database. assumes that bot was removed from server while offline
-            Logger.warn("TwitchSub's server with id {} was not found. Removing from database.");
-            RemoveServer.removeServer(twitchSub.server_id);
+            Logger.warn("Subscription with server with id {} was not found. Removing from database.");
+            RemoveServer.removeServer(sub.server_id);
             return;
         }
 
         Server server = optionalServer.get();
-        server.getChannelById(twitchSub.pingchannel_id).ifPresentOrElse(generalDiscordChannel -> {
+        server.getChannelById(sub.pingchannel_id).ifPresentOrElse(generalDiscordChannel -> {
             generalDiscordChannel.asServerTextChannel().ifPresentOrElse(discordServerTextChannel -> {
-                server.getRoleById(twitchSub.pingrole_id).ifPresentOrElse(discordPingRole -> {
-                    try {
-                        EmbedBuilder notificationEmbed = createTwitchStreamOnlineEmbed(twitchSub.broadcaster_id, discordPingRole.getColor());
-                        discordServerTextChannel.sendMessage(notificationEmbed);
-                    } catch (Exception e) {
-                        Logger.error(e, "Failed to create embed for Twitch stream notification. Falling back with simple message.");
-                        String streamLink = twitch_stream_url_prefix + streamer_name;
-                        discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " [" + streamer_name + " went live on Twitch!" + "](" + streamLink + ")");
-                    }
-                }, () -> { Logger.debug("Discord role with id {} in {} does not exist", twitchSub.pingrole_id, twitchSub.server_id); });
-            }, () -> { Logger.debug("Discord channel with id {} in server {} is not a ServerTextChannel", twitchSub.pingchannel_id, twitchSub.server_id);} );
-        }, () -> { Logger.debug("Discord channel with id {} in server {} does not exist", twitchSub.pingchannel_id, twitchSub.server_id);} );
+                server.getRoleById(sub.pingrole_id).ifPresentOrElse(discordPingRole -> {
 
-        Logger.debug("Pushed stream notification for broadcaster id {} in server id {}", twitchSub.broadcaster_id, twitchSub.server_id);
+                    // differences between twitch/youtube sub here:
+                    if (sub.getClass() == TwitchSub.class) {
+                        try {
+                            discordServerTextChannel.sendMessage(createTwitchStreamOnlineEmbed(sub.broadcaster_id, discordPingRole.getColor()));
+                        } catch (Exception e) {
+                            Logger.error(e, "Failed to create embed for Twitch stream notification. Falling back with simple message.");
+                            String streamLink = twitch_stream_url_prefix + streamer_name;
+                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " [" + streamer_name + " went live on Twitch!" + "](" + streamLink + ")");
+                        }
+                    } else {
+                        // if youtube sub
+                        try {
+                            discordServerTextChannel.sendMessage(createYoutubeStreamOnlineEmbed(yt_stream, yt_pfp_url, discordPingRole.getColor()));
+                        } catch (Exception e) {
+                            Logger.error(e, "Failed to create embed for Youtube stream notification. Falling back with simple message.");
+                            YoutubeSub ytSub = (YoutubeSub) sub;
+                            String streamLink = youtube_stream_url_prefix + ytSub.last_stream_video_id;
+                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " [" + ytSub.broadcaster_handle + " went live on Twitch!" + "](" + streamLink + ")");
+                        }
+                    }
+                    
+                }, () -> { Logger.debug("Discord role with id {} in {} does not exist", sub.pingrole_id, sub.server_id); });
+            }, () -> { Logger.debug("Discord channel with id {} in server {} is not a ServerTextChannel", sub.pingchannel_id, sub.server_id);} );
+        }, () -> { Logger.debug("Discord channel with id {} in server {} does not exist", sub.pingchannel_id, sub.server_id);} );
+
+        Logger.debug("Pushed stream notification for broadcaster id {} in server id {}", sub.broadcaster_id, sub.server_id);
     }
 
     public static EmbedBuilder createTwitchStreamOnlineEmbed(@NotNull String broadcaster_id, Optional<Color> color) throws TwitchApiException, InvalidArgumentException {
@@ -65,8 +108,13 @@ public class PushStreamNotification {
             .setTimestampToNow();
     }
 
-    // TODO create push method for Youtube subs
-    public static void pushYoutubeStreamNotification(YoutubeSub sub) {
-        
+    public static EmbedBuilder createYoutubeStreamOnlineEmbed(Video stream, String pfp_url, Optional<Color> color) {
+        String streamLink = youtube_stream_url_prefix + stream.getId();
+        return new EmbedBuilder()
+            .setAuthor(stream.getSnippet().getChannelTitle() + " went live on Youtube!", streamLink, pfp_url)
+            .setTitle(stream.getSnippet().getTitle())
+            .setUrl(streamLink)
+            .setColor(color.orElse(Constants.youtube_red))
+            .setTimestampToNow();
     }
 }
