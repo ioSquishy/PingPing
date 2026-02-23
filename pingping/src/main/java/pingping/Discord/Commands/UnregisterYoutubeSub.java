@@ -80,7 +80,7 @@ public class UnregisterYoutubeSub extends DiscordCommand {
         String broadcaster_id;
         YoutubeChannel yc = Database.YoutubeChannelsTable.getChannelFromHandle(youtube_channel);
         if (yc == null) {
-            throw new DatabaseException("Could not find existing subscription for specified Youtube channel.");
+            throw new InvalidArgumentException("Could not find existing subscription for specified Youtube channel.");
         } else {
             broadcaster_id = yc.broadcaster_id;
         }
@@ -89,7 +89,7 @@ public class UnregisterYoutubeSub extends DiscordCommand {
         // this check is still necesarry because even if the sub exists in YoutubeChannelTable, this server SPECIFICALLY may not be subbed 
         YoutubeSub sub = Database.YoutubeSubsTable.pullYoutubeSub(server_id, broadcaster_id);
         if (sub == null) {
-            throw new DatabaseException("Could not find existing subscription for specified Youtube channel.");
+            throw new InvalidArgumentException("Could not find existing subscription for specified Youtube channel.");
         }
 
         // remove subscription from database

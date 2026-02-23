@@ -82,7 +82,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
         // get sub (if it exists)
         TwitchSub sub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
         if (sub == null) {
-            throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
+            throw new InvalidArgumentException("Could not find existing subscription for specified twitch channel.");
         }
 
         // remove subscription from database
