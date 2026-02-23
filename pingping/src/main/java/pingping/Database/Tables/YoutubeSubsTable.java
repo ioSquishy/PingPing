@@ -23,7 +23,7 @@ public class YoutubeSubsTable {
         // language=sql
         String sql = MessageFormat.format("""
                 CREATE TABLE IF NOT EXISTS {0} (
-                    {1} INTEGER UNIQUE NOT NULL, -- server_id
+                    {1} INTEGER NOT NULL, -- server_id
                     {2} TEXT NOT NULL, -- broadcaster_id
                     {3} INTEGER NOT NULL, -- pingrole_id
                     {4} INTEGER NOT NULL, -- pingchannel_id
@@ -46,7 +46,7 @@ public class YoutubeSubsTable {
     public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String uploads_playlist_id, @NotNull String broadcaster_handle, String last_stream_video_id) throws DatabaseException {
         // language=sql
         final String sql = """
-                INSERT OR IGNORE INTO youtube_subscriptions (
+                INSERT INTO youtube_subscriptions (
                     server_id, broadcaster_id, pingrole_id, pingchannel_id
                 ) VALUES (?, ?, ?, ?)
                 """;

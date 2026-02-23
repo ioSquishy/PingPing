@@ -37,7 +37,6 @@ public class ServerTable {
     }
 
     /**
-     * will also create a new TwitchTable table with the specified server_id
      * @param server_id
      * @return
      * @throws DatabaseException 

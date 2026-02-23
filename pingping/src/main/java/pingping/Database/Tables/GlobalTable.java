@@ -42,7 +42,7 @@ public class GlobalTable {
     }
 
     public static void insertKey(@NotNull String key) throws DatabaseException {
-        final String sql = "INSERT OR IGNORE INTO global (key) VALUES(?)";
+        final String sql = "INSERT INTO global (key) VALUES(?)";
         Logger.trace("SQL: {}\n?: {}", sql, key);
 
         try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {

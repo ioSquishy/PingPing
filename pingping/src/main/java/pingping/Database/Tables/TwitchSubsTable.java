@@ -23,7 +23,7 @@ public class TwitchSubsTable {
         // language=sql
         final String sql = MessageFormat.format("""
                 CREATE TABLE IF NOT EXISTS {0} (
-                    {1} INTEGER UNIQUE NOT NULL, -- SERVER_ID
+                    {1} INTEGER NOT NULL, -- SERVER_ID
                     {2} TEXT NOT NULL, -- BROADCASTER_ID
                     {3} INTEGER NOT NULL, -- PINGROLE_ID
                     {4} INTEGER NOT NULL, -- PINGCHANNEL_ID
@@ -46,7 +46,7 @@ public class TwitchSubsTable {
     public static void insertSubscription(long server_id, @NotNull String broadcaster_id, long pingrole_id, long pingchannel_id, @NotNull String eventsub_id) throws DatabaseException {
         // language=sql
         final String sql = """
-                INSERT OR IGNORE INTO twitch_subscriptions (
+                INSERT INTO twitch_subscriptions (
                     server_id, broadcaster_id, pingrole_id, pingchannel_id
                 ) VALUES (?, ?, ?, ?)
                 """;
