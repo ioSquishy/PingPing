@@ -15,6 +15,7 @@ import org.tinylog.Logger;
 import com.google.api.services.youtube.model.Channel;
 
 import pingping.Database.Database;
+import pingping.Database.OrmObjects.YoutubeChannel;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
@@ -81,13 +82,17 @@ public class RegisterYoutubeSub extends DiscordCommand {
         }
     }
 
-    // TODO: to make more quota-efficient, check if broadcaster uploads_playlist and broacaster_id is already in the database via youtube_handle and copy from there
     public static void registerSub(long server_id, @NotNull String youtube_handle, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, YoutubeApiException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, youtube_handle={}, pingrole_id={}", commandName, server_id, youtube_handle, pingrole_id, pingchannel_id);
-        Channel youtubeChannel = YoutubeAPI.getChannel(youtube_handle);
-        String broadcaster_id = YoutubeAPI.getChannelId(youtubeChannel);
-        String uploads_playlist_id = YoutubeAPI.getChannelUploadsPlaylistId(youtubeChannel);
-        registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, youtube_handle);
+        YoutubeChannel dbYcChannel = Database.YoutubeChannelsTable.getChannelFromHandle(youtube_handle); // existing YoutubeChanel in database
+        if (dbYcChannel != null) {
+            registerSub(server_id, dbYcChannel.broadcaster_id, pingrole_id, pingchannel_id, dbYcChannel.uploads_playlist_id, youtube_handle);
+        } else {
+            Channel youtubeChannel = YoutubeAPI.getChannel(youtube_handle);
+            String broadcaster_id = YoutubeAPI.getChannelId(youtubeChannel);
+            String uploads_playlist_id = YoutubeAPI.getChannelUploadsPlaylistId(youtubeChannel);
+            registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, youtube_handle);
+        }
         Logger.debug("Registered youtube sub for streamer {} in server {}", youtube_handle, server_id);
     }
 
