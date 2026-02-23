@@ -112,12 +112,14 @@ public class YoutubeAPI {
             playlistItemsList.setMaxResults(1L);
 
             PlaylistItemListResponse response = playlistItemsList.execute();
-            Logger.trace(response.toPrettyString());
+            
 
             if (response.getItems() != null && !response.getItems().isEmpty()) {
                 PlaylistItem playlistItem = response.getItems().get(0);
+                Logger.trace("Got latest video id ({}) from playlistId ({})", playlistItem.getContentDetails().getVideoId(), playlistId);
                 return playlistItem.getContentDetails().getVideoId();
             } else {
+                Logger.trace(response.toPrettyString());
                 throw new YoutubeApiException("No videos found for playlist id: " + playlistId);
             }
         } catch (Exception e) {
@@ -133,11 +135,17 @@ public class YoutubeAPI {
             videoList.setId(videoId);
 
             VideoListResponse response = videoList.execute();
-            Logger.trace(response.toPrettyString());
+            
             if (response != null && !response.getItems().isEmpty()) {
                 Video video = response.getItems().get(0);
+                Logger.trace("Got video object for videoId: {}", videoId);
                 return video;
             } else {
+                if (response != null) {
+                    Logger.trace(response.toPrettyString());
+                } else {
+                    Logger.warn("Response for video from video id was null.");
+                }
                 throw new YoutubeApiException("No videos found for videoId: " + videoId);
             }
         } catch (Exception e) {
