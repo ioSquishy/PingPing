@@ -56,9 +56,6 @@ public class DiscordEventRegistrar {
         registeredEvents.values().forEach(eventClass -> {
             eventClass.get().registerEventListener();
         });
-        // for (Supplier<DiscordEvent> eventClass : registeredEvents.values()) {
-        //     eventClass.get().registerEventListener();
-        // }
         Logger.debug("Registered discord event listeners in API");
     }
 }

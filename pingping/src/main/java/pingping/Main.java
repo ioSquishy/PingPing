@@ -6,6 +6,7 @@ import pingping.Database.Database;
 import pingping.Discord.DiscordAPI;
 import pingping.Discord.Events.ErrorLogEvent;
 import pingping.Twitch.TwitchConduit;
+import pingping.Youtube.LivePoller;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,7 +16,7 @@ public class Main {
             TwitchConduit.getConduit();
             DiscordAPI.connect();
             ErrorLogEvent.setDmErrorsStatus(isRunningFromJar());
-            // TODO: start LivePoller
+            LivePoller.startPolling();
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             System.exit(-1);
