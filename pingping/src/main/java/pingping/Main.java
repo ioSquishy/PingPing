@@ -15,6 +15,7 @@ public class Main {
             TwitchConduit.getConduit();
             DiscordAPI.connect();
             ErrorLogEvent.setDmErrorsStatus(isRunningFromJar());
+            // TODO: start LivePoller
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             System.exit(-1);

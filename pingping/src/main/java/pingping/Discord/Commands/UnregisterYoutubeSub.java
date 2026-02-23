@@ -55,7 +55,7 @@ public class UnregisterYoutubeSub extends DiscordCommand {
         } catch (InvalidArgumentException e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).respond();
-        } catch (YoutubeApiException | DatabaseException e) {
+        } catch (DatabaseException e) {
             Logger.error(e);
             response.setContent(e.getMessage()).respond();
         } catch (Exception e) {
@@ -74,22 +74,22 @@ public class UnregisterYoutubeSub extends DiscordCommand {
      * @throws DatabaseException if database modification fails
      * @throws YoutubeApiException if unregistration through API fails
      */
-    public static void unregisterSub(long server_id, String youtube_channel) throws InvalidArgumentException, DatabaseException, YoutubeApiException {
+    public static void unregisterSub(long server_id, String youtube_channel) throws InvalidArgumentException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, youtube_channel={}", commandName, server_id, youtube_channel);
         // try to pull id from database first
         String broadcaster_id;
         YoutubeChannel yc = Database.YoutubeChannelsTable.getChannelFromHandle(youtube_channel);
         if (yc == null) {
-            throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
+            throw new DatabaseException("Could not find existing subscription for specified Youtube channel.");
         } else {
             broadcaster_id = yc.broadcaster_id;
         }
 
         // get sub (if it exists)
-        // this check is still necesarry because even if the sub exists in TwitchChannelTable, this server SPECIFICALLY may not be subbed 
+        // this check is still necesarry because even if the sub exists in YoutubeChannelTable, this server SPECIFICALLY may not be subbed 
         YoutubeSub sub = Database.YoutubeSubsTable.pullYoutubeSub(server_id, broadcaster_id);
         if (sub == null) {
-            throw new DatabaseException("Could not find existing subscription for specified twitch channel.");
+            throw new DatabaseException("Could not find existing subscription for specified Youtube channel.");
         }
 
         // remove subscription from database

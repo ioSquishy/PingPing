@@ -35,7 +35,7 @@ public class UpdateTwitchSub extends DiscordCommand {
     protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
-            .setDescription("Update a twitch subscription for this server.")
+            .setDescription("Update a Twitch subscription for this server.")
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()

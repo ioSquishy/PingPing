@@ -34,7 +34,7 @@ public class RegisterYoutubeSub extends DiscordCommand {
     protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
-            .setDescription("Registered a youtube subscription for this server.")
+            .setDescription("Registered a Youtube subscription for this server.")
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()

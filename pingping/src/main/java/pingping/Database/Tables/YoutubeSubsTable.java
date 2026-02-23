@@ -251,4 +251,49 @@ public class YoutubeSubsTable {
             throw new DatabaseException("Failed to pull youtube subs from database.");
         }
     }
+
+    public static void updateSubscription(long server_id, @NotNull String broadcaster_id, long updated_pingrole_id, long updated_pingchannel_id, @NotNull String updated_uploads_playlist_id, @NotNull String updated_broadcaster_handle, String last_stream_video_id) throws DatabaseException {
+        // language=sql
+        final String sql = """
+                UPDATE youtube_subscriptions
+                SET pingrole_id = ?, pingchannel_id = ?
+                WHERE server_id = ? AND broadcaster_id = ?
+                """;
+        Logger.trace("SQL: {}\n?: {},{},{},{}", sql, updated_pingrole_id, updated_pingchannel_id, server_id, broadcaster_id);
+        
+        Connection databaseConnection = Database.getConnection();
+        try (PreparedStatement statement = databaseConnection.prepareStatement(sql)) {
+            statement.setLong(1, updated_pingrole_id);
+            statement.setLong(2, updated_pingchannel_id);
+            statement.setLong(3, server_id);
+            statement.setString(4, broadcaster_id);
+
+            databaseConnection.setAutoCommit(false);
+            statement.executeUpdate();
+            YoutubeChannelsTable.setUploadsPlaylistId(broadcaster_id, updated_uploads_playlist_id);
+            YoutubeChannelsTable.setBroadcasterHandle(broadcaster_id, updated_broadcaster_handle);
+            YoutubeChannelsTable.setLastStreamVideoId(broadcaster_id, last_stream_video_id);
+            databaseConnection.commit();
+            Logger.debug("Updated twitch sub in database with server id {} and broadcaster id {}", server_id, broadcaster_id);
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to update subscription with server id {} and broadcaster id {}.", server_id, broadcaster_id);
+            try {
+                databaseConnection.rollback();
+            } catch (SQLException e1) {
+                Logger.error(e1, "Failed to rollback database commit.");
+            }
+            throw new DatabaseException("Failed to update subscription in database.");
+        } finally {
+            try {
+                Database.getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                Logger.error(e, "Failed to set database auto commit to true.");
+                throw new DatabaseException("Failed to set database auto commit to true.");
+            }
+        }
+    }
+
+    public static void updateSubscription(@NotNull YoutubeSub updated_youtube_sub) throws DatabaseException {
+        updateSubscription(updated_youtube_sub.server_id, updated_youtube_sub.broadcaster_id, updated_youtube_sub.pingrole_id, updated_youtube_sub.pingchannel_id, updated_youtube_sub.uploads_playlist_id, updated_youtube_sub.broadcaster_handle, updated_youtube_sub.last_stream_video_id);
+    }
 }

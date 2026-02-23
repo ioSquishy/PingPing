@@ -32,7 +32,7 @@ public class RegisterTwitchSub extends DiscordCommand {
     protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
-            .setDescription("Registered a twitch subscription for this server.")
+            .setDescription("Registered a Twitch subscription for this server.")
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
