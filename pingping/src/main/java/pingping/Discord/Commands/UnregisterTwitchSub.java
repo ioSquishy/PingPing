@@ -31,7 +31,7 @@ public class UnregisterTwitchSub extends DiscordCommand {
     protected Optional<SlashCommandBuilder> getGlobalCommandBuilder() {
         return Optional.of(new SlashCommandBuilder()
             .setName(commandName)
-            .setDescription("Unregister a twitch subscription for this server.")
+            .setDescription("Unregister a Twitch subscription for this server.")
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()

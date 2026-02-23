@@ -24,9 +24,9 @@ public class YoutubeChannelsTable {
         final String sql = MessageFormat.format("""
             CREATE TABLE IF NOT EXISTS {0} (
                 {1} TEXT UNIQUE NOT NULL, -- broadcaster_id
-                {2} TEXT NOT NULL, -- broadcaster_handle
-                {3} TEXT NOT NULL, -- uploads_playlist_id
-                {4} TEXT, -- last_stream_vid_id
+                {2} TEXT UNIQUE NOT NULL, -- broadcaster_handle
+                {3} TEXT UNIQUE NOT NULL, -- uploads_playlist_id
+                {4} TEXT UNIQUE, -- last_stream_vid_id
                 PRIMARY KEY ({1})
                 )
                 """, YoutubeChannelsTable.tableName, YoutubeSub.BROADCASTER_ID, YoutubeSub.BROADCASTER_HANDLE,
@@ -83,6 +83,35 @@ public class YoutubeChannelsTable {
     }
 
     /**
+     * Returns a YoutubeChannel object from broadcaster_handle
+     * @param broadcaster_handle handle of streamer
+     * @return streamer info in YoutubeChannel object or null not found
+     * @throws DatabaseException
+     */
+    public static YoutubeChannel getChannelFromHandle(@NotNull String broadcaster_handle) throws DatabaseException {
+        final String sql = "SELECT broadcaster_id, uploads_playlist_id, last_stream_vid_id FROM youtube_channels WHERE broadcaster_handle = ? COLLATE NOCASE";
+        Logger.trace("SQL: {}\n?: {}", sql, broadcaster_handle);
+
+        try (PreparedStatement statement = Database.getConnection().prepareStatement(sql)) {
+            statement.setString(1, broadcaster_handle);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String broadcaster_id = resultSet.getString(YoutubeSub.BROADCASTER_ID.SQL_COLUMN);
+                String uploads_playlist_id = resultSet.getString(YoutubeSub.UPLOADS_PLAYLIST_ID.SQL_COLUMN);
+                String last_stream_vid_id = resultSet.getString(YoutubeSub.LAST_STREAM_VIDEO_ID.SQL_COLUMN);
+                return new YoutubeChannel(broadcaster_id, uploads_playlist_id, broadcaster_handle, last_stream_vid_id);
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            Logger.error(e, "Failed to pull youtube channel by handle.");
+            throw new DatabaseException("Failed to pull youtube channel from database.");
+        }
+    }
+
+    /**
      * Gets the broadcaster_id, uploads_playlist_id, broadcaster_handle, and last_stream_video_id of all channels in the database.
      * Does not get server-specific info like server_id, pingchannel_id, and pingrole_id
      * @return list of YoutubeChannel objects; notice it is different from YoutubeSub
@@ -112,7 +141,6 @@ public class YoutubeChannelsTable {
         }
     }
 
-    // TODO call from UnregisterYoutubeSub.java
     public static void removeChannel(@NotNull String broadcaster_id) throws DatabaseException {
         final String sql = "DELETE FROM youtube_channels WHERE broadcaster_id = ?";
         Logger.trace("SQL: {}\n?: {}", sql, broadcaster_id);
