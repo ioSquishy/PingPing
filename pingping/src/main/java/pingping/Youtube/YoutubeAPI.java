@@ -23,6 +23,7 @@ import com.google.api.client.json.gson.GsonFactory;
 
 public class YoutubeAPI {
     private static YouTube youtube = null;
+    private static final String YOUTUBE_API_KEY = Dotenv.load().get("YOUTUBE_API_KEY");
 
     private static YouTube getYouTubeService() {
         if (youtube == null) {
@@ -62,7 +63,7 @@ public class YoutubeAPI {
     public static Channel getChannel(String channelHandle) throws YoutubeApiException {
         try {
             YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails");
-            channelsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            channelsList.setKey(YOUTUBE_API_KEY);
             channelsList.set("forHandle", channelHandle);
 
             ChannelListResponse response = channelsList.execute();
@@ -106,7 +107,7 @@ public class YoutubeAPI {
     public static String getLatestUploadVideoId(String playlistId) throws YoutubeApiException {
         try {
             YouTube.PlaylistItems.List playlistItemsList = getYouTubeService().playlistItems().list("contentDetails");
-            playlistItemsList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            playlistItemsList.setKey(YOUTUBE_API_KEY);
             playlistItemsList.setPlaylistId(playlistId);
             playlistItemsList.setMaxResults(1L);
 
@@ -128,7 +129,7 @@ public class YoutubeAPI {
     public static Video getVideo(String videoId) throws YoutubeApiException {
         try {
             YouTube.Videos.List videoList = getYouTubeService().videos().list("snippet,liveStreamingDetails");
-            videoList.setKey(Dotenv.load().get("YOUTUBE_API_KEY"));
+            videoList.setKey(YOUTUBE_API_KEY);
             videoList.setId(videoId);
 
             VideoListResponse response = videoList.execute();

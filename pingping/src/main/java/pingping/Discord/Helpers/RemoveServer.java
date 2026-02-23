@@ -29,7 +29,7 @@ public class RemoveServer {
             List<YoutubeSub> youtubeSubs = Database.YoutubeSubsTable.pullYoutubeSubsFromServerId(server_id);
             for (YoutubeSub sub : youtubeSubs) {
                 if (Database.YoutubeSubsTable.getNumSubsForBroadcasterId(sub.broadcaster_id) == 1) {
-                    Database.YoutubeChannelsTable.removeChannel(sub.broadcaster_handle);
+                    Database.YoutubeChannelsTable.removeChannel(sub.broadcaster_id);
                 }
             }
             

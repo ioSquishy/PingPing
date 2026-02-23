@@ -38,12 +38,12 @@ public class LivePoller {
                     if (currentStream == null) continue;
 
                     // if its active, make sure video id is not the same as last one stored in database
-                    if (currentStream.getId() == dbChannelInfo.last_stream_video_id) continue;
+                    if (currentStream.getId().equals(dbChannelInfo.last_stream_video_id)) continue;
 
                     // check if broadcaster_handle is up-to-date
-                    if (currentStream.getSnippet().getChannelTitle() != dbChannelInfo.broadcaster_handle) {
+                    if (!currentStream.getSnippet().getChannelTitle().equals(dbChannelInfo.broadcaster_handle)) {
                         // update broadcaster handle
-                        Database.YoutubeChannelsTable.setBroadcasterHandle(dbChannelInfo.broadcaster_handle, currentStream.getSnippet().getChannelTitle());
+                        Database.YoutubeChannelsTable.setBroadcasterHandle(dbChannelInfo.broadcaster_id, currentStream.getSnippet().getChannelTitle());
                     }
 
                     // store new last video id in database

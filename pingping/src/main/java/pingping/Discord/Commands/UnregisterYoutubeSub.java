@@ -16,7 +16,6 @@ import pingping.Database.OrmObjects.YoutubeChannel;
 import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.InvalidArgumentException;
-import pingping.Exceptions.YoutubeApiException;
 
 public class UnregisterYoutubeSub extends DiscordCommand {
     public static final String commandName = "unregisteryoutubesub";
@@ -67,12 +66,10 @@ public class UnregisterYoutubeSub extends DiscordCommand {
     /**
      * Unregister Youtube subscription for a server
      * If that server is the last subscription to the broadcaster, subscription will be removed from YoutubeChannelsTable as well
-     * If unregistration fails, subscription will be re-added to database
      * @param server_id
      * @param youtube_channel handle
      * @throws InvalidArgumentException if youtube channel doesn't exist
      * @throws DatabaseException if database modification fails
-     * @throws YoutubeApiException if unregistration through API fails
      */
     public static void unregisterSub(long server_id, String youtube_channel) throws InvalidArgumentException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, youtube_channel={}", commandName, server_id, youtube_channel);
