@@ -44,27 +44,29 @@ public class LivePoller {
                     if (currentStream.getId().equals(dbChannelInfo.last_stream_video_id)) continue;
 
                     // check if broadcaster_handle is up-to-date
-                    String currentHandle = currentStream.getSnippet().getChannelTitle();
-                    if (!currentHandle.equals(dbChannelInfo.broadcaster_handle)) {
-                        // update broadcaster handle
-                        Database.YoutubeChannelsTable.setBroadcasterHandle(dbChannelInfo.broadcaster_id, currentHandle);
-                    }
+                    // TODO: to check broadcaster handle, need to call Channels: list API (it is under snippet.customUrl)
+                    // ideally call for all channels in one big API call (to cost 1 quota) once per day or something
 
                     // store new last video id in database
                     Database.YoutubeChannelsTable.setLastStreamVideoId(dbChannelInfo.broadcaster_id, currentStream.getId());
 
                     // get channel profile picture
-                    String pfpUrl = YoutubeAPI.getChannel(currentHandle).getSnippet().getThumbnails().getMedium().getUrl();
+                    String pfpUrl = ""; // TODO: set to youtube logo
+                    try {
+                        pfpUrl = YoutubeAPI.getChannelFromId(dbChannelInfo.broadcaster_id).getSnippet().getThumbnails().getMedium().getUrl();
+                    } catch (YoutubeApiException e) {
+                        Logger.warn(e, "Failed to get profile picture for channel {}", dbChannelInfo.broadcaster_handle);
+                    }
 
-                    Logger.trace("Pushing stream notifications for: {}", currentHandle);
+                    Logger.trace("Pushing stream notifications for: {}", dbChannelInfo.broadcaster_handle);
                     // get all subscriptions (for individual servers) with that broadcaster and push stream notification
                     List<YoutubeSub> subs = Database.YoutubeSubsTable.pullYoutubeSubsFromBroadcasterId(dbChannelInfo.broadcaster_id);
                     for (YoutubeSub sub : subs) {
                         PushStreamNotification.pushYoutubeStreamNotification(sub, currentStream, pfpUrl);
                     }
-                    Logger.debug("Finished pushing stream notifications for: {}", currentHandle);
+                    Logger.debug("Finished pushing stream notifications for: {}", dbChannelInfo.broadcaster_handle);
                 } catch (DatabaseException | YoutubeApiException e) {
-                    Logger.error(e);
+                    Logger.error(e, "Failed to poll livestream info for {}", dbChannelInfo.broadcaster_handle);
                 }
             }
         };

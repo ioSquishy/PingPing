@@ -55,19 +55,46 @@ public class YoutubeAPI {
     }
 
     /**
-     * 
+     * Returns a channel from Handle
      * @param channelHandle
      * @return Channel object of channel
      * @throws YoutubeApiException if channel not found or IO exception
      */
-    public static Channel getChannel(String channelHandle) throws YoutubeApiException {
+    public static Channel getChannelFromHandle(String channelHandle) throws YoutubeApiException {
         try {
             YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails");
             channelsList.setKey(YOUTUBE_API_KEY);
             channelsList.set("forHandle", channelHandle);
 
-            ChannelListResponse response = channelsList.execute();
-            Logger.trace(response.toPrettyString());
+            return getChannel(channelsList);
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get channel.");
+        }
+    }
+
+    /**
+     * Returns a channel from ID
+     * @param channelHandle
+     * @return Channel object of channel
+     * @throws YoutubeApiException if channel not found or IO exception
+     */
+    public static Channel getChannelFromId(String id) throws YoutubeApiException {
+        try {
+            YouTube.Channels.List channelsList = getYouTubeService().channels().list("contentDetails,snippet");
+            channelsList.setKey(YOUTUBE_API_KEY);
+            channelsList.set("id", id);
+
+            return getChannel(channelsList);
+        } catch (Exception e) {
+            Logger.error(e);
+            throw new YoutubeApiException("Failed to get channel.");
+        }
+    }
+
+    private static Channel getChannel(YouTube.Channels.List request) throws YoutubeApiException {
+        try {
+            ChannelListResponse response = request.execute();
 
             if (response.getItems() != null && !response.getItems().isEmpty()) {
                 Channel channel = response.getItems().get(0);
@@ -88,11 +115,6 @@ public class YoutubeAPI {
             Logger.error(e);
             throw new YoutubeApiException("Failed to get uploads playlist id.");
         }
-    }
-
-    public static String getChannelUploadsPlaylistId(String channelHandle) throws YoutubeApiException {
-        Channel channel = getChannel(channelHandle);
-        return getChannelUploadsPlaylistId(channel);
     }
 
     public static String getChannelId(Channel channel) throws YoutubeApiException {

@@ -88,7 +88,7 @@ public class RegisterYoutubeSub extends DiscordCommand {
         if (dbYcChannel != null) {
             registerSub(server_id, dbYcChannel.broadcaster_id, pingrole_id, pingchannel_id, dbYcChannel.uploads_playlist_id, youtube_handle);
         } else {
-            Channel youtubeChannel = YoutubeAPI.getChannel(youtube_handle);
+            Channel youtubeChannel = YoutubeAPI.getChannelFromHandle(youtube_handle);
             String broadcaster_id = YoutubeAPI.getChannelId(youtubeChannel);
             String uploads_playlist_id = YoutubeAPI.getChannelUploadsPlaylistId(youtubeChannel);
             registerSub(server_id, broadcaster_id, pingrole_id, pingchannel_id, uploads_playlist_id, youtube_handle);
