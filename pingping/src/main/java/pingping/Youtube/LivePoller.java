@@ -31,6 +31,11 @@ public class LivePoller {
                 return;
             }
 
+            // TODO: make more quota efficient by bulk requesting Video objects
+            // 1. poll API for updated latest video ids, add videoId's of updated ones to an array here
+            // 2. use YoutubeAPI.getVideos(videoId's) and push notifs for each Video returned in that array
+            //    ChannelId is included in the Video snippet to pull additional info from Database/API 
+
             // TODO maybe do this in a parallel stream in the future
             // poll whether streamer is live and push notifications if true
             for (YoutubeChannel dbChannelInfo : channels) {
@@ -51,7 +56,7 @@ public class LivePoller {
                     Database.YoutubeChannelsTable.setLastStreamVideoId(dbChannelInfo.broadcaster_id, currentStream.getId());
 
                     // get channel profile picture
-                    String pfpUrl = ""; // TODO: set to youtube logo
+                    String pfpUrl = "https://developers.google.com/static/site-assets/logo-youtube.svg";
                     try {
                         pfpUrl = YoutubeAPI.getChannelFromId(dbChannelInfo.broadcaster_id).getSnippet().getThumbnails().getMedium().getUrl();
                     } catch (YoutubeApiException e) {

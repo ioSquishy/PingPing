@@ -2,6 +2,7 @@ package pingping.Youtube;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.Optional;
 
 import org.tinylog.Logger;
@@ -174,6 +175,19 @@ public class YoutubeAPI {
             Logger.error(e);
             throw new YoutubeApiException("Failed to get video.");
         }
+    }
+
+    /**
+     * TODO: implement
+     * Returns a list of Video objects from list of Video IDs
+     * @param videoIds List of ID's to try and get videos from
+     * @return List of Video objects from ID's that were valid
+     */
+    public static List<Video> getVideos(List<String> videoIds) {
+        // transform videoIds into comma separated list (111,222,333)
+        // send api request with videoList.setId(commaSeparatedVideoIds)
+        // return list of Videos
+        return null;
     }
 
     public static boolean isVideoLive(Video video) {
