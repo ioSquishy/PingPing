@@ -41,6 +41,7 @@ public class YoutubeAPI {
     }
 
     /**
+     * Quota cost: 2
      * @param uploadsPlaylistId
      * @return the video if they are live, or else an empty optional
      * @throws YoutubeApiException
@@ -57,6 +58,7 @@ public class YoutubeAPI {
 
     /**
      * Returns a channel from Handle
+     * Quota cost: 1
      * @param channelHandle
      * @return Channel object of channel
      * @throws YoutubeApiException if channel not found or IO exception
@@ -76,6 +78,7 @@ public class YoutubeAPI {
 
     /**
      * Returns a channel from ID
+     * Quota cost: 1
      * @param channelHandle
      * @return Channel object of channel
      * @throws YoutubeApiException if channel not found or IO exception
@@ -127,6 +130,13 @@ public class YoutubeAPI {
         }
     }
 
+    /**
+     * Quota cost: 1
+     * Returns the latest upload in a playlist
+     * @param playlistId
+     * @return
+     * @throws YoutubeApiException
+     */
     public static String getLatestUploadVideoId(String playlistId) throws YoutubeApiException {
         try {
             YouTube.PlaylistItems.List playlistItemsList = getYouTubeService().playlistItems().list("contentDetails");
@@ -151,6 +161,12 @@ public class YoutubeAPI {
         }
     }
 
+    /**
+     * Quota cost: 1
+     * @param videoId
+     * @return
+     * @throws YoutubeApiException
+     */
     public static Video getVideo(String videoId) throws YoutubeApiException {
         try {
             YouTube.Videos.List videoList = getYouTubeService().videos().list("snippet,liveStreamingDetails");

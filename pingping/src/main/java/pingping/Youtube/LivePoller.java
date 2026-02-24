@@ -82,7 +82,7 @@ public class LivePoller {
             scheduler = Executors.newSingleThreadScheduledExecutor();
         }
         
-        scheduler.scheduleAtFixedRate(pollApi(), 0, 1L, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(pollApi(), 0, 2L, TimeUnit.MINUTES);
         Logger.info("LivePoller Started.");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
