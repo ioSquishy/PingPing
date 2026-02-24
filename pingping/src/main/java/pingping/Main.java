@@ -10,13 +10,15 @@ import pingping.Youtube.LivePoller;
 
 public class Main {
     public static void main(String[] args) {
+        boolean isRunningFromjar = isRunningFromJar();
+        System.setProperty("tinylog.configuration", isRunningFromjar ? "pingping\\src\\main\\resources\\prod.properties" : "pingping\\src\\main\\resources\\dev.properties");
         ConsoleCommands.startListenerThread();
         try {
             Database.getConnection();
             TwitchConduit.getConduit();
             DiscordAPI.connect();
             LivePoller.startPolling();
-            ErrorLogEvent.setDmErrorsStatus(isRunningFromJar());
+            ErrorLogEvent.setDmErrorsStatus(isRunningFromjar);
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             System.exit(-1);
@@ -24,12 +26,10 @@ public class Main {
     }
 
     private static boolean isRunningFromJar() {
-        boolean state = Main.class.getProtectionDomain()
+        return Main.class.getProtectionDomain()
             .getCodeSource()
             .getLocation()
             .getPath()
             .endsWith(".jar");
-        Logger.info("Running from jar: {}", state);
-        return state;
     }
 }
