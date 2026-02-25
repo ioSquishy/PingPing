@@ -19,28 +19,28 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.tinylog.Logger;
 
-import pingping.Database.OrmObjects.TwitchSub;
+import pingping.Database.OrmObjects.YoutubeSub;
 import pingping.Discord.DiscordAPI;
 import pingping.Discord.Helpers.PermissionlessRole;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.DiscordApiException;
 import pingping.Exceptions.InvalidArgumentException;
-import pingping.Exceptions.TwitchApiException;
+import pingping.Exceptions.YoutubeApiException;
 
 /**
  * Server specific Discord command for Indie VTuber Fan Server
  */
-public class QuickCreateTwitchSub extends DiscordCommand {
-    public static final String commandName = "quickcreatetwitchsub";
+public class QuickCreateYoutubeSub extends DiscordCommand {
+    public static final String commandName = "quickcreateyoutubesub";
     private final static Map<Long, Long> registeredQuickCreations = new HashMap<Long, Long>(); // <server_id, pingchannel_id>
     static {
-        DiscordCommandFactory.registerCommand(commandName, QuickCreateTwitchSub::new);
+        DiscordCommandFactory.registerCommand(commandName, QuickCreateYoutubeSub::new);
 
         // initialize registeredQuickCreations
         registeredQuickCreations.put(791040843279630356L, 842061663389614220L); // Test Server, testing-area
         registeredQuickCreations.put(598886416545611790L, 781360321515880448L); // Indie VTuber, livestreams
     }
-    public QuickCreateTwitchSub(SlashCommandInteraction interaction) {
+    public QuickCreateYoutubeSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
     }
     private static final String color_option_command_name = "color";
@@ -52,7 +52,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
             .setDefaultEnabledForPermissions(PermissionType.ADMINISTRATOR)
             .setEnabledInDms(false)
             .addOption(new SlashCommandOptionBuilder()
-                .setName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG)
+                .setName(YoutubeSub.BROADCASTER_ID.DISCORD_CMD_ARG)
                 .setDescription("Streamer to register notification for.")
                 .setType(SlashCommandOptionType.STRING)
                 .setRequired(true)
@@ -73,9 +73,9 @@ public class QuickCreateTwitchSub extends DiscordCommand {
             }
         });
 
-        // return empty since this is a server-specific command
         Logger.trace("Registered command {} for all QuickCreate registered servers.", commandName);
 
+        // return empty since this is a server-specific command
         return Optional.empty();
     }
     @Override
@@ -84,7 +84,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         try {
             Logger.trace("{} discord command ran.", commandName);
             long serverId = this.interaction.getServer().get().getId();
-            String streamer = this.interaction.getArgumentStringValueByName(TwitchSub.BROADCASTER_ID.DISCORD_CMD_ARG).get();
+            String streamer = this.interaction.getArgumentStringValueByName(YoutubeSub.BROADCASTER_ID.DISCORD_CMD_ARG).get();
             Optional<String> hexColor = this.interaction.getArgumentStringValueByName(color_option_command_name);
 
             Color color = null;
@@ -107,7 +107,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         } catch (InvalidArgumentException  e) {
             Logger.debug(e);
             response.setContent(e.getMessage()).respond();
-        } catch (DatabaseException | TwitchApiException | DiscordApiException e) {
+        } catch (DatabaseException | YoutubeApiException | DiscordApiException e) {
             Logger.error(e);
             response.setContent(e.getMessage()).respond();
         }  catch (Exception e) {
@@ -116,7 +116,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         }
     }
 
-    public static void runCommand(long server_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, TwitchApiException, DatabaseException, DiscordApiException {
+    public static void runCommand(long server_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, YoutubeApiException, DatabaseException, DiscordApiException {
         Logger.trace("{} command ran with arguments: server_id={}, streamer={}, role_color={}", commandName, server_id, streamer, role_color);
 
         // retrieve pre-set pingchannel for server
@@ -130,7 +130,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         Logger.debug("Quick-created streamer subscription for streamer {} in server {}", streamer, server_id);
     }
 
-    public static void runCommand(long server_id, long pingchannel_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, TwitchApiException, DatabaseException, DiscordApiException {
+    public static void runCommand(long server_id, long pingchannel_id, String streamer, @Nullable Color role_color) throws InvalidArgumentException, YoutubeApiException, DatabaseException, DiscordApiException {
         Server server;
         try {
             server = DiscordAPI.getAPI().getServerById(server_id).orElseThrow();
@@ -155,9 +155,9 @@ public class QuickCreateTwitchSub extends DiscordCommand {
 
         // register streamer using new pingrole
         try {
-            RegisterTwitchSub.registerSub(server_id, streamer, pingRole.getId(), pingchannel_id);
-        } catch (InvalidArgumentException | TwitchApiException | DatabaseException e) {
-            Logger.error("RegisterTwitchSub failed, deleting created streamer roles.");
+            RegisterYoutubeSub.registerSub(server_id, streamer, pingRole.getId(), pingchannel_id);
+        } catch (InvalidArgumentException | YoutubeApiException | DatabaseException e) {
+            Logger.error("RegisterYoutubeSub failed, deleting created streamer roles.");
             try {
                 displayRole.delete("Stream registration failed.").join();
                 pingRole.delete("Stream registration failed.").join();

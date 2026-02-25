@@ -2,6 +2,8 @@ package pingping.Discord.Helpers;
 
 import java.util.Optional;
 
+import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.message.component.Button;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.jetbrains.annotations.NotNull;
@@ -69,21 +71,30 @@ public class PushStreamNotification {
 
                     // differences between twitch/youtube sub here:
                     if (sub.getClass() == TwitchSub.class) {
+                        // if twitch sub
+                        String streamLink = twitch_stream_url_prefix + streamer_name;
                         try {
-                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag(), createTwitchStreamOnlineEmbed(sub.broadcaster_id, discordPingRole.getColor()));
+                            new MessageBuilder()
+                                .setContent(discordPingRole.getMentionTag())
+                                .addEmbed(createTwitchStreamOnlineEmbed(sub.broadcaster_id, discordPingRole.getColor()))
+                                .addActionRow(Button.link(streamLink, "Watch Stream"))
+                                .send(discordServerTextChannel);
                         } catch (Exception e) {
                             Logger.error(e, "Failed to create embed for Twitch stream notification. Falling back with simple message.");
-                            String streamLink = twitch_stream_url_prefix + streamer_name;
                             discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " [" + streamer_name + " went live on Twitch!" + "](" + streamLink + ")");
                         }
                     } else {
                         // if youtube sub
+                        YoutubeSub ytSub = (YoutubeSub) sub;
+                        String streamLink = youtube_stream_url_prefix + ytSub.last_stream_video_id;
                         try {
-                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag(), createYoutubeStreamOnlineEmbed(yt_stream, yt_pfp_url, discordPingRole.getColor()));
+                            new MessageBuilder()
+                                .setContent(discordPingRole.getMentionTag())
+                                .addEmbed(createYoutubeStreamOnlineEmbed(yt_stream, yt_pfp_url, discordPingRole.getColor()))
+                                .addActionRow(Button.link(streamLink, "Watch Stream"))
+                                .send(discordServerTextChannel);
                         } catch (Exception e) {
                             Logger.error(e, "Failed to create embed for Youtube stream notification. Falling back with simple message.");
-                            YoutubeSub ytSub = (YoutubeSub) sub;
-                            String streamLink = youtube_stream_url_prefix + ytSub.last_stream_video_id;
                             discordServerTextChannel.sendMessage(discordPingRole.getMentionTag() + " [" + ytSub.broadcaster_handle + " went live on Twitch!" + "](" + streamLink + ")");
                         }
                     }
