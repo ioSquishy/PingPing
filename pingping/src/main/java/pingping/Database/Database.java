@@ -5,10 +5,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.tinylog.Logger;
 
+import pingping.Main;
 import pingping.Exceptions.DatabaseException;
 
 public class Database {
-    private static final String connectionUrl = "jdbc:sqlite:notpingping.db";
+    private static String connectionUrl = Main.isRunningFromJar() ? "jdbc:sqlite:/app/data/data.db" : "jdbc:sqlite:data.db";
     private Connection connection = null;
     private static Database singleton = null;
     private Database() {}

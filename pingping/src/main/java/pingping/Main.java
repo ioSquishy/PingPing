@@ -11,7 +11,9 @@ import pingping.Youtube.LivePoller;
 public class Main {
     public static void main(String[] args) {
         boolean isRunningFromjar = isRunningFromJar();
-        System.setProperty("tinylog.configuration", isRunningFromjar ? "pingping\\src\\main\\resources\\prod.properties" : "pingping\\src\\main\\resources\\dev.properties");
+        if (!isRunningFromjar) {
+            System.setProperty("tinylog.configuration", "pingping/src/main/resources/dev.properties");
+        }
         ConsoleCommands.startListenerThread();
         try {
             Database.getConnection();
@@ -25,7 +27,7 @@ public class Main {
         }
     }
 
-    private static boolean isRunningFromJar() {
+    public static boolean isRunningFromJar() {
         return Main.class.getProtectionDomain()
             .getCodeSource()
             .getLocation()
