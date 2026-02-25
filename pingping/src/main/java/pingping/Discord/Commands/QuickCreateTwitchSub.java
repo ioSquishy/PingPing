@@ -140,17 +140,13 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         }
 
         // quick create roles
-        Role displayRole;
         Role pingRole;
         try {
-            displayRole = PermissionlessRole.create(server, streamer, role_color);
-            Logger.trace("Display role created with id: {}", displayRole.getId());
-
-            pingRole = PermissionlessRole.create(server, streamer + " Ping", role_color);
+            pingRole = PermissionlessRole.create(server, streamer + " Pings", role_color);
             Logger.trace("Ping role created with id: {}", pingRole.getId());
         } catch (CompletionException e) {
             Logger.debug(e, "Failed to create roles for streamer.");
-            throw new DiscordApiException("Failed to create roles for streamer. Does the bot have permissions?");
+            throw new DiscordApiException("Failed to create role for streamer. Does the bot have permissions?");
         }
 
         // register streamer using new pingrole
@@ -159,7 +155,6 @@ public class QuickCreateTwitchSub extends DiscordCommand {
         } catch (InvalidArgumentException | TwitchApiException | DatabaseException e) {
             Logger.error("RegisterTwitchSub failed, deleting created streamer roles.");
             try {
-                displayRole.delete("Stream registration failed.").join();
                 pingRole.delete("Stream registration failed.").join();
             } catch (CompletionException e1) {
                 Logger.error(e1, "Failed to delete roles created for streamer after registration failed.");

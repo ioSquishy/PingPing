@@ -140,13 +140,9 @@ public class QuickCreateYoutubeSub extends DiscordCommand {
         }
 
         // quick create roles
-        Role displayRole;
         Role pingRole;
         try {
-            displayRole = PermissionlessRole.create(server, streamer, role_color);
-            Logger.trace("Display role created with id: {}", displayRole.getId());
-
-            pingRole = PermissionlessRole.create(server, streamer + " Ping", role_color);
+            pingRole = PermissionlessRole.create(server, streamer + " Pings", role_color);
             Logger.trace("Ping role created with id: {}", pingRole.getId());
         } catch (CompletionException e) {
             Logger.debug(e, "Failed to create roles for streamer.");
@@ -159,7 +155,6 @@ public class QuickCreateYoutubeSub extends DiscordCommand {
         } catch (InvalidArgumentException | YoutubeApiException | DatabaseException e) {
             Logger.error("RegisterYoutubeSub failed, deleting created streamer roles.");
             try {
-                displayRole.delete("Stream registration failed.").join();
                 pingRole.delete("Stream registration failed.").join();
             } catch (CompletionException e1) {
                 Logger.error(e1, "Failed to delete roles created for streamer after registration failed.");
