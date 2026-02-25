@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.component.Button;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.server.Server;
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
@@ -68,6 +69,14 @@ public class PushStreamNotification {
         server.getChannelById(sub.pingchannel_id).ifPresentOrElse(generalDiscordChannel -> {
             generalDiscordChannel.asServerTextChannel().ifPresentOrElse(discordServerTextChannel -> {
                 server.getRoleById(sub.pingrole_id).ifPresentOrElse(discordPingRole -> {
+
+                    // check if bot has permission to send messages
+                    if (!discordServerTextChannel.hasPermissions(DiscordAPI.getAPI().getYourself(), PermissionType.SEND_MESSAGES, PermissionType.VIEW_CHANNEL)) {
+                        Logger.debug("Bot does not have permission to send messages in channel with id: {}", discordServerTextChannel.getId());
+                        server.getOwner().ifPresent(owner -> owner.sendMessage("I do not have permission to send messages in " + discordServerTextChannel.getMentionTag()).join());
+
+                        return;
+                    }
 
                     // differences between twitch/youtube sub here:
                     if (sub.getClass() == TwitchSub.class) {

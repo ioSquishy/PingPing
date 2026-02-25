@@ -5,6 +5,7 @@ import java.util.concurrent.CompletionException;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.intent.Intent;
 import org.tinylog.Logger;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -15,7 +16,7 @@ public class DiscordAPI {
     private static DiscordApi api = null;
 
     public static void connectOnlyApi() {
-        api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).login().join();
+        api = new DiscordApiBuilder().setToken(Dotenv.load().get("DISCORD_TOKEN")).addIntents(Intent.DIRECT_MESSAGES).login().join();
         Logger.debug("Connected to Discord API.");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
