@@ -70,7 +70,7 @@ public class PushStreamNotification {
                     // differences between twitch/youtube sub here:
                     if (sub.getClass() == TwitchSub.class) {
                         try {
-                            discordServerTextChannel.sendMessage(createTwitchStreamOnlineEmbed(sub.broadcaster_id, discordPingRole.getColor()));
+                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag(), createTwitchStreamOnlineEmbed(sub.broadcaster_id, discordPingRole.getColor()));
                         } catch (Exception e) {
                             Logger.error(e, "Failed to create embed for Twitch stream notification. Falling back with simple message.");
                             String streamLink = twitch_stream_url_prefix + streamer_name;
@@ -79,7 +79,7 @@ public class PushStreamNotification {
                     } else {
                         // if youtube sub
                         try {
-                            discordServerTextChannel.sendMessage(createYoutubeStreamOnlineEmbed(yt_stream, yt_pfp_url, discordPingRole.getColor()));
+                            discordServerTextChannel.sendMessage(discordPingRole.getMentionTag(), createYoutubeStreamOnlineEmbed(yt_stream, yt_pfp_url, discordPingRole.getColor()));
                         } catch (Exception e) {
                             Logger.error(e, "Failed to create embed for Youtube stream notification. Falling back with simple message.");
                             YoutubeSub ytSub = (YoutubeSub) sub;

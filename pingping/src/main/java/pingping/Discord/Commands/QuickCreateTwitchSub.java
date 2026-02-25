@@ -38,6 +38,7 @@ public class QuickCreateTwitchSub extends DiscordCommand {
 
         // initialize registeredQuickCreations
         registeredQuickCreations.put(791040843279630356L, 842061663389614220L); // Test Server, testing-area
+        registeredQuickCreations.put(598886416545611790L, 781360321515880448L); // Indie VTuber, livestreams
     }
     public QuickCreateTwitchSub(SlashCommandInteraction interaction) {
         super(commandName, interaction);
