@@ -12,6 +12,7 @@ import com.google.api.services.youtube.model.Video;
 import pingping.Database.Database;
 import pingping.Database.OrmObjects.YoutubeChannel;
 import pingping.Database.OrmObjects.YoutubeSub;
+import pingping.Discord.Helpers.PingCooldown;
 import pingping.Discord.Helpers.PushStreamNotification;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.YoutubeApiException;
@@ -40,6 +41,12 @@ public class LivePoller {
             // poll whether streamer is live and push notifications if true
             for (YoutubeChannel dbChannelInfo : channels) {
                 try {
+                    if (PingCooldown.isOnCooldown(dbChannelInfo.broadcaster_id)) {
+                        continue;
+                    } else {
+                        PingCooldown.putOnCooldown(dbChannelInfo.broadcaster_id);
+                    }
+
                     Logger.trace("Polling live status for: {}", dbChannelInfo.broadcaster_handle);
                     // use YoutubeApi.getActiveLivestream
                     Video currentStream = YoutubeAPI.getActiveLivestream(dbChannelInfo.uploads_playlist_id).orElse(null);

@@ -9,6 +9,7 @@ import com.github.twitch4j.eventsub.events.StreamOnlineEvent;
 
 import pingping.Database.Database;
 import pingping.Database.OrmObjects.TwitchSub;
+import pingping.Discord.Helpers.PingCooldown;
 import pingping.Discord.Helpers.PushStreamNotification;
 import pingping.Exceptions.DatabaseException;
 import pingping.Exceptions.TwitchApiException;
@@ -46,6 +47,11 @@ public class TwitchStreamEvent extends DiscordEvent {
     }
 
     public static void handleStreamOnlineEvent(@NotNull String broadcaster_id, String streamer_name) throws DatabaseException {
+        if (PingCooldown.isOnCooldown(broadcaster_id)) {
+            return;
+        } else {
+            PingCooldown.putOnCooldown(broadcaster_id);
+        }
         List<TwitchSub> subscriptions = Database.TwitchSubsTable.pullTwitchSubsFromBroadcasterId(broadcaster_id);
         subscriptions.forEach(sub -> {
             PushStreamNotification.pushTwitchStreamNotification(sub, streamer_name);
