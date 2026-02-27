@@ -83,6 +83,17 @@ public class RegisterTwitchSub extends DiscordCommand {
     public static void registerSub(long server_id, @NotNull String twitch_channel, long pingrole_id, long pingchannel_id) throws InvalidArgumentException, TwitchApiException, DatabaseException {
         Logger.trace("{} command ran with arguments: server_id={}, twitch_channel={}, pingrole_id={}", commandName, server_id, twitch_channel, pingrole_id, pingchannel_id);
         String broadcaster_id = TwitchAPI.getChannelId(twitch_channel);
+
+        // do a sanity check to make sure id is valid since it has failed before
+        try {
+            if (!TwitchAPI.getUserById(broadcaster_id).getLogin().toLowerCase().equals(twitch_channel.toLowerCase())) {
+                Logger.debug("Twitch API returned wrong ID {} for user {}", broadcaster_id, twitch_channel);
+                throw new TwitchApiException("Twitch API returned wrong user_id. Please retry.");
+            }
+        } catch (InvalidArgumentException e) {
+            Logger.debug(e, "ID returned by Twitch API was incorrect.");
+            throw new TwitchApiException("Twitch API returned wrong user_id. Please retry.");
+        }
         
         // verify TwitchSub with id does not already exist
         TwitchSub potentialExistingSub = Database.TwitchSubsTable.pullTwitchSub(server_id, broadcaster_id);
