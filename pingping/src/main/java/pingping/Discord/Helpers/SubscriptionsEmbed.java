@@ -82,6 +82,7 @@ public class SubscriptionsEmbed {
         final String subType = subscription.getClass().getSimpleName(); // will be TwitchSub for example
         try {
             switch (subType) {
+                // TODO: store Twitch display name in database to be more efficient
                 case "TwitchSub": return TwitchAPI.getUserById(subscription.broadcaster_id).getDisplayName();
                 case "YoutubeSub": return ((YoutubeSub) subscription).broadcaster_handle;
                 default:

@@ -34,17 +34,18 @@ public class TestPermissions extends DiscordCommand {
         Logger.trace("{} discord command ran.", commandName);
         ServerTextChannel serverTextChannel = interaction.getChannel().flatMap(TextChannel::asServerTextChannel).orElse(null);
         if (serverTextChannel == null) {
-          interaction.createImmediateResponder().setContent("Can only send messages to Server Text Channels").setFlags(MessageFlag.EPHEMERAL).respond();
-          return;
+            interaction.createImmediateResponder().setContent("Can only send messages to Server Text Channels").setFlags(MessageFlag.EPHEMERAL).respond();
+            return;
         }
         User myself = DiscordAPI.getAPI().getYourself();
+        // TODO: send an emoji check mark or x instead of true/false
         interaction.createImmediateResponder()
-          .append("- Send message permission: " + (serverTextChannel.hasPermission(myself, PermissionType.SEND_MESSAGES))).appendNewLine()
-          .append("- View channel permission:" + (serverTextChannel.hasPermission(myself, PermissionType.VIEW_CHANNEL))).appendNewLine()
-          .append("- Embed messages permission:" + (serverTextChannel.hasPermission(myself, PermissionType.EMBED_LINKS))).appendNewLine()
-          .append("- Mention everyone/roles permission:" + (serverTextChannel.hasPermission(myself, PermissionType.MENTION_EVERYONE)))
-          .setFlags(MessageFlag.EPHEMERAL)
-          .respond();
+            .append("- Send message permission: " + (serverTextChannel.hasPermission(myself, PermissionType.SEND_MESSAGES))).appendNewLine()
+            .append("- View channel permission: " + (serverTextChannel.hasPermission(myself, PermissionType.VIEW_CHANNEL))).appendNewLine()
+            .append("- Embed messages permission: " + (serverTextChannel.hasPermission(myself, PermissionType.EMBED_LINKS))).appendNewLine()
+            .append("- Mention everyone/roles permission: " + (serverTextChannel.hasPermission(myself, PermissionType.MENTION_EVERYONE)))
+            .setFlags(MessageFlag.EPHEMERAL)
+            .respond();
     }
 
     
