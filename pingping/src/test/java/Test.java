@@ -1,14 +1,13 @@
-import pingping.Discord.Helpers.PingCooldown;
+import java.util.concurrent.ExecutionException;
+
+import pingping.Discord.DiscordAPI;
 
 public class Test {
     public static void main(String[] args) throws InterruptedException {
-      String id = "hi";
-      System.out.println("isOnCooldown: " + PingCooldown.isOnCooldown(id));
-
-      PingCooldown.putOnCooldown(id);
-      System.out.println("isOnCooldown: " + PingCooldown.isOnCooldown(id));
-
-      Thread.sleep(1500);
-      System.out.println("isOnCooldown: " + PingCooldown.isOnCooldown(id));
+      try {
+        DiscordAPI.getAPI().getOwner().get().get().sendMessage("hi");
+      } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+      }
     }
 }
