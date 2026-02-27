@@ -28,4 +28,8 @@ public class PingCooldown {
     public static boolean isOnCooldown(String broadcaster_id) {
         return onCooldown.contains(broadcaster_id);
     }
+
+    public static HashSet<String> getCooldownSet() {
+        return onCooldown;
+    }
 }
