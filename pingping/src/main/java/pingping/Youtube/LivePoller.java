@@ -41,19 +41,32 @@ public class LivePoller {
             // poll whether streamer is live and push notifications if true
             for (YoutubeChannel dbChannelInfo : channels) {
                 try {
+                    Logger.trace("Polling live status for: {}\nID: {}", dbChannelInfo.broadcaster_handle, dbChannelInfo.broadcaster_id);
+
+                    // if stream ping was already sent within last hour, skip checking
                     if (PingCooldown.isOnCooldown(dbChannelInfo.broadcaster_id)) {
+                        Logger.trace("{} is on cooldown... skipping", dbChannelInfo.broadcaster_handle);
                         continue;
-                    } else {
-                        PingCooldown.putOnCooldown(dbChannelInfo.broadcaster_id);
                     }
 
-                    Logger.trace("Polling live status for: {}", dbChannelInfo.broadcaster_handle);
-                    // use YoutubeApi.getActiveLivestream
+                    // get active livestream
                     Video currentStream = YoutubeAPI.getActiveLivestream(dbChannelInfo.uploads_playlist_id).orElse(null);
-                    if (currentStream == null) continue;
+                    if (currentStream == null) {
+                        Logger.trace("{} is not live... skipping", dbChannelInfo.broadcaster_handle);
+                        continue;
+                    }
 
                     // if its active, make sure video id is not the same as last one stored in database
-                    if (currentStream.getId().equals(dbChannelInfo.last_stream_video_id)) continue;
+                    if (currentStream.getId().equals(dbChannelInfo.last_stream_video_id)) {
+                        // if it is the same stream and they are still live, put them back on cooldown to save quota
+                        PingCooldown.putOnCooldown(dbChannelInfo.broadcaster_id);
+                        Logger.trace("{} notification was already sent... skipping");
+                        continue;
+                    }
+
+                    /* STREAM IS NEW AND ASSUMED LIVE PAST THIS POINT */
+                    Logger.trace("Attempting to send notification for {}", dbChannelInfo.broadcaster_handle);
+                    PingCooldown.putOnCooldown(dbChannelInfo.broadcaster_id);
 
                     // check if broadcaster_handle is up-to-date
                     // TODO: to check broadcaster handle, need to call Channels: list API (it is under snippet.customUrl)
@@ -70,9 +83,9 @@ public class LivePoller {
                         Logger.warn(e, "Failed to get profile picture for channel {}", dbChannelInfo.broadcaster_handle);
                     }
 
-                    Logger.trace("Pushing stream notifications for: {}", dbChannelInfo.broadcaster_handle);
-                    // get all subscriptions (for individual servers) with that broadcaster and push stream notification
+                    // get all subscriptions (for individual servers) with that broadcaster and push stream notifications
                     List<YoutubeSub> subs = Database.YoutubeSubsTable.pullYoutubeSubsFromBroadcasterId(dbChannelInfo.broadcaster_id);
+                    Logger.trace("Pushing stream notifications to {} servers for: {}", subs.size(), dbChannelInfo.broadcaster_handle);
                     for (YoutubeSub sub : subs) {
                         PushStreamNotification.pushYoutubeStreamNotification(sub, currentStream, pfpUrl);
                     }

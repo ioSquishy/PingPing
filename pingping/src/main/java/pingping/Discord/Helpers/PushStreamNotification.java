@@ -55,7 +55,7 @@ public class PushStreamNotification {
      * @param yt_pfp_url (for Youtube) URL of streamer profile picture
      */
     private static void pushStreamNotification(StreamerSubscription sub, String streamer_name, Video yt_stream, String yt_pfp_url) {
-        Logger.trace("Pushing stream notification for broadcaster id {} in server id {}", sub.broadcaster_id, sub.server_id);
+        Logger.trace("Attempting to push stream notification for broadcaster id {} in server id {}", sub.broadcaster_id, sub.server_id);
 
         Optional<Server> optionalServer = DiscordAPI.getAPI().getServerById(sub.server_id);
         if (optionalServer.isEmpty()) {
