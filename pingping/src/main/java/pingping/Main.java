@@ -10,8 +10,8 @@ import pingping.Youtube.LivePoller;
 
 public class Main {
     public static void main(String[] args) {
-        boolean isRunningFromjar = isRunningFromJar();
-        if (!isRunningFromjar) {
+        boolean isRunningFromJar = isRunningFromJar();
+        if (!isRunningFromJar) {
             System.setProperty("tinylog.configuration", "pingping/src/main/resources/dev.properties");
         }
         ConsoleCommands.startListenerThread();
@@ -20,7 +20,7 @@ public class Main {
             TwitchConduit.getConduit();
             DiscordAPI.connect();
             LivePoller.startPolling();
-            ErrorLogEvent.setDmErrorsStatus(isRunningFromjar);
+            ErrorLogEvent.setDmErrorsStatus(isRunningFromJar);
         } catch (Exception e) {
             Logger.error(e, "Failed to start up successfully. Quitting.");
             System.exit(-1);

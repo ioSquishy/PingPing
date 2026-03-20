@@ -38,15 +38,16 @@ public class TestPermissions extends DiscordCommand {
             return;
         }
         User myself = DiscordAPI.getAPI().getYourself();
-        // TODO: send an emoji check mark or x instead of true/false
         interaction.createImmediateResponder()
-            .append("- Send message permission: " + (serverTextChannel.hasPermission(myself, PermissionType.SEND_MESSAGES))).appendNewLine()
-            .append("- View channel permission: " + (serverTextChannel.hasPermission(myself, PermissionType.VIEW_CHANNEL))).appendNewLine()
-            .append("- Embed messages permission: " + (serverTextChannel.hasPermission(myself, PermissionType.EMBED_LINKS))).appendNewLine()
-            .append("- Mention everyone/roles permission: " + (serverTextChannel.hasPermission(myself, PermissionType.MENTION_EVERYONE)))
+            .append("- Send message permission: " + getPermissionStatusEmoji((serverTextChannel.hasPermission(myself, PermissionType.SEND_MESSAGES)))).appendNewLine()
+            .append("- View channel permission: " + getPermissionStatusEmoji((serverTextChannel.hasPermission(myself, PermissionType.VIEW_CHANNEL)))).appendNewLine()
+            .append("- Embed messages permission: " + getPermissionStatusEmoji((serverTextChannel.hasPermission(myself, PermissionType.EMBED_LINKS)))).appendNewLine()
+            .append("- Mention everyone/roles permission: " + getPermissionStatusEmoji((serverTextChannel.hasPermission(myself, PermissionType.MENTION_EVERYONE))))
             .setFlags(MessageFlag.EPHEMERAL)
             .respond();
     }
 
-    
+    private static String getPermissionStatusEmoji(boolean hasPermission) {
+        return hasPermission ? ":white_check_mark:" : ":x:";
+    }
 }
